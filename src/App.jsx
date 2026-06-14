@@ -819,10 +819,10 @@ function MiniPopup({ item, onViewCart, onClose }) {
 }
 
 const PAYMENT_METHODS = [
-  { id:"pix",     label:"Pix",            desc:"5% de desconto",          discount:true  },
-  { id:"credito", label:"Cartao de Credito", desc:"Ate 2x sem juros",     discount:false },
-  { id:"debito",  label:"Cartao de Debito",  desc:"A vista",              discount:false },
-  { id:"dinheiro",label:"Dinheiro",          desc:"A vista na loja",      discount:false },
+  { id:"pix",     label:"Pix",              desc:"5% de desconto",    discount:true  },
+  { id:"credito", label:"Cartao de Credito", desc:"1x ou 2x sem juros", discount:false },
+  { id:"debito",  label:"Cartao de Debito",  desc:"A vista",           discount:false },
+  { id:"dinheiro",label:"Dinheiro",          desc:"Troco se precisar",  discount:false },
 ];
 
 function CartDrawer({ items, onClose, onCheckout }) {
@@ -898,6 +898,13 @@ function CartDrawer({ items, onClose, onCheckout }) {
                 <span className="cart-total-label">{isPix ? "Total no Pix" : "Total"}</span>
                 <span className="cart-total-val">{fmt(total)}</span>
                 {isPix && <span className="cart-total-saving">Voce economiza {fmt(sub - total)}</span>}
+                {payment === "credito" && (
+                  <div style={{marginTop:8,fontSize:12,color:"var(--muted)"}}>
+                    <div style={{color:"var(--white)",fontWeight:600}}>Opcoes no cartao:</div>
+                    <div>1x de {fmt(total)} (a vista)</div>
+                    <div>2x de {fmt(total/2)} sem juros</div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -989,7 +996,7 @@ function BannerCarousel({ banners: propBanners }) {
 
 function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
   const [delivery, setDelivery] = useState("retirada");
-  const [form, setForm]         = useState({ name:"", phone:"", cep:"", address:"", neighborhood:"", city:"", state:"", number:"", complement:"" });
+  const [form, setForm]         = useState({ name:"", phone:"", cep:"", address:"", neighborhood:"", city:"", state:"", number:"", complement:"", troco:"" });
   const [errors, setErrors]     = useState({});
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError,   setCepError]   = useState("");
@@ -1098,9 +1105,35 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
         </div>
         <div className="checkout-field">
           <label>WhatsApp *</label>
-          <input className={"checkout-input"+(errors.phone?" err":"")} placeholder="(48) 9 9999-9999"
-            value={form.phone} onChange={e=>set("phone",e.target.value)} />
+          <input
+            className={"checkout-input"+(errors.phone?" err":"")}
+            placeholder="(48) 9 9999-9999"
+            value={form.phone}
+            inputMode="numeric"
+            onChange={e => {
+              const digits = e.target.value.replace(/\D/g,"").slice(0,11);
+              const fmt = digits.length > 10
+                ? `(${digits.slice(0,2)}) ${digits.slice(2,3)} ${digits.slice(3,7)}-${digits.slice(7)}`
+                : digits.length > 6
+                ? `(${digits.slice(0,2)}) ${digits.slice(2,6)}-${digits.slice(6)}`
+                : digits;
+              set("phone", fmt);
+            }}
+          />
         </div>
+
+        {/* Troco se dinheiro */}
+        {payment === "dinheiro" && (
+          <div className="checkout-field">
+            <label>Troco para quanto? (opcional)</label>
+            <input
+              className="checkout-input"
+              placeholder="Ex: R$ 100,00"
+              value={form.troco}
+              onChange={e=>set("troco",e.target.value)}
+            />
+          </div>
+        )}
 
         {/* Entrega */}
         <div className="checkout-section-label">Forma de Entrega</div>
@@ -1119,6 +1152,13 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
           <div style={{background:"#111",border:"1px solid var(--border)",borderRadius:10,padding:"12px 14px",marginTop:10,fontSize:12,color:"var(--muted)",lineHeight:1.7}}>
             📍 Av. das Tipuanas, 710 — Palhoca, SC<br/>
             🕐 Seg–Sex 09h–19h · Sab 09h–15h
+          </div>
+        )}
+        {delivery === "entrega" && (
+          <div style={{background:"#0e0b00",border:"1px solid var(--gold3)",borderRadius:10,padding:"10px 14px",marginTop:10,fontSize:12,color:"var(--muted)",lineHeight:1.7}}>
+            <div style={{color:"var(--gold)",fontWeight:700,marginBottom:4}}>Informacoes sobre entrega</div>
+            Entrega realizada via <strong style={{color:"var(--white)"}}>99 ou Uber</strong> — o valor do frete sera negociado diretamente com voce pelo WhatsApp.<br/>
+            <span style={{color:"var(--gold3)"}}>Atendemos Grande Florianopolis, Palhoca e Sao Jose.</span>
           </div>
         )}
 
@@ -2006,7 +2046,7 @@ export default function App() {
       `*Nome:* ${form.name}`,
       `*WhatsApp:* ${form.phone}`,
       `*Entrega:* ${entrega}`,
-      `*Pagamento:* ${payLabel}`,
+      `*Pagamento:* ${payLabel}${form.troco ? " — Troco para " + form.troco : ""}`,
       `*Total: ${fmt(total)}*`,
     ].join("%0A");
     // Salvar pedido no banco
