@@ -33,68 +33,7 @@ const supa = {
 const PIX_DISCOUNT = 0.05;
 
 
-const BANNERS = [
-  {
-    id: 1,
-    tag: "Oferta Especial",
-    title: "Nike Air Force 1",
-    subtitle: "O classico que nunca sai de moda",
-    price: "R$ 599,90",
-    oldPrice: "R$ 749,90",
-    highlight: "20% OFF",
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=85",
-    bg: "linear-gradient(135deg, #0c0900 0%, #1a1200 50%, #0c0900 100%)",
-    accent: "#DCB43C",
-  },
-  {
-    id: 2,
-    tag: "Lancamento",
-    title: "Adidas Ultraboost 23",
-    subtitle: "Performance e conforto em cada passo",
-    price: "R$ 849,90",
-    oldPrice: "R$ 999,90",
-    highlight: "15% OFF",
-    image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=800&q=85",
-    bg: "linear-gradient(135deg, #080808 0%, #141414 50%, #080808 100%)",
-    accent: "#F0C850",
-  },
-  {
-    id: 3,
-    tag: "Mais Vendido",
-    title: "Perfumes Importados",
-    subtitle: "Hugo Boss, Lacoste e muito mais",
-    price: "A partir de R$ 349,90",
-    oldPrice: "A partir de R$ 449,90",
-    highlight: "22% OFF",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683702?w=800&q=85",
-    bg: "linear-gradient(135deg, #0a0800 0%, #181200 50%, #0a0800 100%)",
-    accent: "#DCB43C",
-  },
-  {
-    id: 4,
-    tag: "Tendencia",
-    title: "Relogios & Correntes",
-    subtitle: "Acessorios que completam o visual",
-    price: "A partir de R$ 129,90",
-    oldPrice: "A partir de R$ 179,90",
-    highlight: "28% OFF",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=85",
-    bg: "linear-gradient(135deg, #080808 0%, #111100 50%, #080808 100%)",
-    accent: "#F0C850",
-  },
-  {
-    id: 5,
-    tag: "Kit Imperdivel",
-    title: "Meias & Chinelos",
-    subtitle: "Conforto no dia a dia com estilo",
-    price: "A partir de R$ 79,90",
-    oldPrice: "A partir de R$ 99,90",
-    highlight: "20% OFF",
-    image: "https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=800&q=85",
-    bg: "linear-gradient(135deg, #0c0900 0%, #1a1200 50%, #0c0900 100%)",
-    accent: "#DCB43C",
-  },
-];
+const BANNERS = [];
 
 const CATEGORIES_DEFAULT = [
   { id:"Todos",    label:"Todos"     },
@@ -109,88 +48,7 @@ const CATEGORIES_DEFAULT = [
   { id:"Perfume",  label:"Perfumes"  },
 ];
 
-const PRODUCTS_DEFAULT = [
-  { id:1,  cat:"Tenis",    name:"Nike Air Force 1",          brand:"Nike",           price:599.9,  oldPrice:749.9,  stock:3,  isNew:false,
-    image:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80",
-    description:"O classico que nunca sai de moda. Couro premium, solado Air resistente.",
-    sizes:[{size:"38",stock:2},{size:"39",stock:0},{size:"40",stock:3},{size:"41",stock:1},{size:"42",stock:0},{size:"43",stock:4}] },
-  { id:2,  cat:"Tenis",    name:"Adidas Ultraboost 23",       brand:"Adidas",         price:849.9,  oldPrice:999.9,  stock:5,  isNew:true,
-    image:"https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=500&q=80",
-    description:"Performance e conforto em cada passo. Tecnologia Boost para maxima energia.",
-    sizes:[{size:"39",stock:1},{size:"40",stock:2},{size:"41",stock:3},{size:"42",stock:2},{size:"43",stock:0}] },
-  { id:3,  cat:"Tenis",    name:"New Balance 574",            brand:"New Balance",    price:479.9,  oldPrice:599.9,  stock:2,  isNew:false,
-    image:"https://images.unsplash.com/photo-1539185441755-769473a23570?w=500&q=80",
-    description:"Estilo retro com tecnologia moderna. Iconico e confortavel.",
-    sizes:[{size:"38",stock:3},{size:"40",stock:1},{size:"41",stock:0},{size:"42",stock:2}] },
-  { id:4,  cat:"Tenis",    name:"Vans Old Skool",             brand:"Vans",           price:389.9,  oldPrice:459.9,  stock:4,  isNew:false,
-    image:"https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=500&q=80",
-    description:"O skate shoe mais famoso do mundo. Resistente e estiloso.",
-    sizes:[{size:"38",stock:1},{size:"39",stock:0},{size:"40",stock:4},{size:"41",stock:2}] },
-  { id:5,  cat:"Camiseta", name:"Camiseta Nike Dri-FIT",      brand:"Nike",           price:189.9,  oldPrice:249.9,  stock:8,  isNew:false,
-    image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&q=80",
-    description:"Tecido Dri-FIT que afasta o suor. Perfeita para treino ou dia a dia.",
-    sizes:[{size:"P",stock:3},{size:"M",stock:5},{size:"G",stock:4},{size:"GG",stock:2}] },
-  { id:6,  cat:"Camiseta", name:"Camiseta Lacoste Polo",      brand:"Lacoste",        price:349.9,  oldPrice:429.9,  stock:5,  isNew:true,
-    image:"https://images.unsplash.com/photo-1588117305388-c2631a279f82?w=500&q=80",
-    description:"Polo classica Lacoste. Algodao premium, acabamento impecavel.",
-    sizes:[{size:"P",stock:2},{size:"M",stock:3},{size:"G",stock:3},{size:"GG",stock:1}] },
-  { id:7,  cat:"Bone",     name:"Bone Nike Snapback",         brand:"Nike",           price:129.9,  oldPrice:169.9,  stock:6,  isNew:false,
-    image:"https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=500&q=80",
-    description:"Bone Nike com aba reta e fechamento snapback. Estilo street.",
-    sizes:[{size:"Unico",stock:6}] },
-  { id:8,  cat:"Bone",     name:"Bone Adidas Strapback",      brand:"Adidas",         price:119.9,  oldPrice:159.9,  stock:4,  isNew:true,
-    image:"https://images.unsplash.com/photo-1534215754734-18e55d13e346?w=500&q=80",
-    description:"Bone Adidas com logo bordado. Conforto e estilo para o dia a dia.",
-    sizes:[{size:"Unico",stock:4}] },
-  { id:9,  cat:"Blusa",    name:"Moletom Tommy Hilfiger",     brand:"Tommy Hilfiger", price:699.9,  oldPrice:899.9,  stock:3,  isNew:true,
-    image:"https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=500&q=80",
-    description:"Moletom premium Tommy Hilfiger. Fleece macio, logo iconico.",
-    sizes:[{size:"P",stock:1},{size:"M",stock:2},{size:"G",stock:1},{size:"GG",stock:0}] },
-  { id:10, cat:"Blusa",    name:"Blusa Adidas Trefoil",       brand:"Adidas",         price:279.9,  oldPrice:349.9,  stock:5,  isNew:false,
-    image:"https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=500&q=80",
-    description:"Blusa Adidas Originals com o iconico Trefoil. Algodao premium.",
-    sizes:[{size:"P",stock:2},{size:"M",stock:2},{size:"G",stock:1}] },
-  { id:11, cat:"Corrente", name:"Corrente Prata 6mm",         brand:"Imperio",        price:129.9,  oldPrice:179.9,  stock:10, isNew:false,
-    image:"https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&q=80",
-    description:"Corrente banhada a prata 6mm. 60cm de comprimento. Fecho canhao.",
-    sizes:[{size:"60cm",stock:5},{size:"70cm",stock:5}] },
-  { id:12, cat:"Corrente", name:"Corrente Ouro 8mm",          brand:"Imperio",        price:179.9,  oldPrice:229.9,  stock:8,  isNew:true,
-    image:"https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=500&q=80",
-    description:"Corrente banhada a ouro 8mm. Visual premium e elegante.",
-    sizes:[{size:"60cm",stock:4},{size:"70cm",stock:4}] },
-  { id:13, cat:"Relogio",  name:"Relogio Masculino Gold",     brand:"Imperio",        price:299.9,  oldPrice:399.9,  stock:4,  isNew:false,
-    image:"https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
-    description:"Relogio analogico com caixa dourada. Resistente a agua 30m.",
-    sizes:[{size:"Unico",stock:4}] },
-  { id:14, cat:"Relogio",  name:"Relogio Esportivo Digital",  brand:"Imperio",        price:249.9,  oldPrice:329.9,  stock:3,  isNew:true,
-    image:"https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=500&q=80",
-    description:"Relogio esportivo digital. Cronometro, alarme e resistencia a agua.",
-    sizes:[{size:"Unico",stock:3}] },
-  { id:15, cat:"Meia",     name:"Kit 3 Meias Nike",           brand:"Nike",           price:79.9,   oldPrice:99.9,   stock:15, isNew:false,
-    image:"https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=500&q=80",
-    description:"Kit com 3 pares de meias Nike cano medio. Algodao premium.",
-    sizes:[{size:"34-38",stock:8},{size:"39-43",stock:7}] },
-  { id:16, cat:"Meia",     name:"Kit 6 Meias Adidas",         brand:"Adidas",         price:119.9,  oldPrice:159.9,  stock:10, isNew:false,
-    image:"https://images.unsplash.com/photo-1556909172-8c2f041fca1e?w=500&q=80",
-    description:"Kit com 6 pares de meias Adidas. Cano curto. Mista.",
-    sizes:[{size:"34-38",stock:5},{size:"39-43",stock:5}] },
-  { id:17, cat:"Chinelo",  name:"Chinelo Nike Benassi",       brand:"Nike",           price:149.9,  oldPrice:199.9,  stock:6,  isNew:false,
-    image:"https://images.unsplash.com/photo-1603487742131-4160ec999306?w=500&q=80",
-    description:"Chinelo Nike Benassi. Palmilha acolchoada e tira com logo.",
-    sizes:[{size:"38",stock:2},{size:"39",stock:2},{size:"40",stock:1},{size:"41",stock:1}] },
-  { id:18, cat:"Chinelo",  name:"Chinelo Adidas Adilette",    brand:"Adidas",         price:139.9,  oldPrice:179.9,  stock:5,  isNew:true,
-    image:"https://images.unsplash.com/photo-1562183241-b937e95585b6?w=500&q=80",
-    description:"O chinelo mais iconico do mundo. Conforto e estilo insuperaveis.",
-    sizes:[{size:"38",stock:1},{size:"39",stock:2},{size:"40",stock:2}] },
-  { id:19, cat:"Perfume",  name:"Perfume Hugo Boss Bottled",  brand:"Hugo Boss",      price:399.9,  oldPrice:499.9,  stock:4,  isNew:false,
-    image:"https://images.unsplash.com/photo-1541643600914-78b084683702?w=500&q=80",
-    description:"Fragancia masculina Hugo Boss Bottled. Amadeirado e sofisticado.",
-    sizes:[{size:"100ml",stock:4}] },
-  { id:20, cat:"Perfume",  name:"Perfume Lacoste Essential",  brand:"Lacoste",        price:349.9,  oldPrice:449.9,  stock:3,  isNew:true,
-    image:"https://images.unsplash.com/photo-1592945403244-b3faa543c281?w=500&q=80",
-    description:"Lacoste Essential — fresco, citrico e elegante. Para o homem moderno.",
-    sizes:[{size:"100ml",stock:3}] },
-];
+const PRODUCTS_DEFAULT = [];
 
 const ANNOUNCEMENTS = [
   "PIX 5% DE DESCONTO EM TODAS AS COMPRAS",
@@ -1588,6 +1446,46 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
     setBannerList(b => b.map(x => x.id===id ? {...x, ativo} : x));
   };
 
+  // Upload de imagem para o Supabase Storage
+  const uploadImage = async (file, bucket = "produtos") => {
+    const ext      = file.name.split(".").pop();
+    const filename = `${Date.now()}.${ext}`;
+    const res = await fetch(`${SUPA_URL}/storage/v1/object/${bucket}/${filename}`, {
+      method: "POST",
+      headers: {
+        "apikey":        SUPA_KEY,
+        "Authorization": `Bearer ${SUPA_KEY}`,
+        "Content-Type":  file.type,
+        "x-upsert":      "true",
+      },
+      body: file,
+    });
+    if (!res.ok) throw new Error("Erro no upload");
+    return `${SUPA_URL}/storage/v1/object/public/${bucket}/${filename}`;
+  };
+
+  const handleImageUpload = async (e, bucket = "produtos") => {
+    const file = e.target.files[0];
+    if (!file) return;
+    showMsg("Enviando imagem...");
+    try {
+      const url = await uploadImage(file, bucket);
+      setForm(f => ({ ...f, image: url }));
+      showMsg("Imagem enviada!");
+    } catch { showMsg("Erro ao enviar imagem. Crie o bucket no Supabase Storage."); }
+  };
+
+  const handleBannerImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    showMsg("Enviando imagem...");
+    try {
+      const url = await uploadImage(file, "banners");
+      setBannerForm(f => ({ ...f, image: url }));
+      showMsg("Imagem enviada!");
+    } catch { showMsg("Erro ao enviar imagem."); }
+  };
+
   const openNew = () => {
     setEditing("new");
     setForm({ name:"", brand:"", cat:"Tenis", description:"", price:"", old_price:"", stock:"", image:"", ativo:true });
@@ -1702,13 +1600,35 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
               {editing==="new" ? "Novo Produto" : "Editar Produto"}
             </div>
 
-            {/* Imagem preview */}
-            {form.image && <img src={form.image} alt="" style={{width:"100%",height:160,objectFit:"cover",borderRadius:10,marginBottom:12}} />}
+{/* Imagem com upload */}
+            <div className="form-group">
+              <label className="form-label">Foto do Produto</label>
+              <label style={{
+                display:"flex", alignItems:"center", justifyContent:"center",
+                gap:10, background:"#111", border:"2px dashed var(--border)",
+                borderRadius:10, padding:"14px", cursor:"pointer",
+                transition:"border-color .2s", marginBottom:0,
+              }}
+                onMouseEnter={e=>e.currentTarget.style.borderColor="var(--gold)"}
+                onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}
+              >
+                <input type="file" accept="image/*" style={{display:"none"}} onChange={handleImageUpload} />
+                {form.image
+                  ? <img src={form.image} alt="" style={{width:60,height:60,borderRadius:8,objectFit:"cover"}} />
+                  : <div style={{fontSize:28,color:"var(--muted)"}}>+</div>
+                }
+                <div>
+                  <div style={{fontSize:13,color:"var(--white)",fontWeight:600}}>
+                    {form.image ? "Trocar foto" : "Clique para escolher foto"}
+                  </div>
+                  <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>JPG, PNG ou WEBP</div>
+                </div>
+              </label>
+            </div>
 
             {[
               {k:"name",        l:"Nome *"},
               {k:"brand",       l:"Marca"},
-              {k:"image",       l:"URL da Foto"},
               {k:"description", l:"Descricao"},
             ].map(({k,l})=>(
               <div className="form-group" key={k}>
@@ -1800,24 +1720,43 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
               {editingBanner==="new" ? "Novo Banner" : "Editar Banner"}
             </div>
 
-            {bannerForm.image && (
-              <img src={bannerForm.image} alt="" style={{width:"100%",height:120,objectFit:"cover",borderRadius:10,marginBottom:12}} />
-            )}
-
-            {[
+{[
               {k:"title",    l:"Titulo *",        ph:"Ex: Nike Air Force 1"},
               {k:"tag",      l:"Tag (topo)",      ph:"Ex: Oferta Especial"},
               {k:"subtitle", l:"Subtitulo",       ph:"Ex: O classico que nunca sai de moda"},
-              {k:"image",    l:"URL da Imagem",   ph:"https://..."},
+              {k:"__upload__", l:"", ph:""},
               {k:"price",    l:"Preco",           ph:"Ex: R$ 599,90"},
               {k:"old_price",l:"Preco antigo",    ph:"Ex: R$ 749,90"},
               {k:"highlight",l:"Destaque (badge)",ph:"Ex: 20% OFF"},
             ].map(({k,l,ph})=>(
-              <div className="form-group" key={k}>
-                <label className="form-label">{l}</label>
-                <input className="form-input" placeholder={ph} value={bannerForm[k]||""}
-                  onChange={e=>setBannerForm(f=>({...f,[k]:e.target.value}))} />
-              </div>
+              k === "__upload__" ? (
+                <div className="form-group" key={k}>
+                  <label className="form-label">Imagem do Banner</label>
+                  <label style={{
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    gap:10, background:"#111", border:"2px dashed var(--border)",
+                    borderRadius:10, padding:"14px", cursor:"pointer",
+                  }}>
+                    <input type="file" accept="image/*" style={{display:"none"}} onChange={handleBannerImageUpload} />
+                    {bannerForm.image
+                      ? <img src={bannerForm.image} alt="" style={{width:60,height:60,borderRadius:8,objectFit:"cover"}} />
+                      : <div style={{fontSize:28,color:"var(--muted)"}}>+</div>
+                    }
+                    <div>
+                      <div style={{fontSize:13,color:"var(--white)",fontWeight:600}}>
+                        {bannerForm.image ? "Trocar imagem" : "Clique para escolher imagem"}
+                      </div>
+                      <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>JPG, PNG ou WEBP</div>
+                    </div>
+                  </label>
+                </div>
+              ) : (
+                <div className="form-group" key={k}>
+                  <label className="form-label">{l}</label>
+                  <input className="form-input" placeholder={ph} value={bannerForm[k]||""}
+                    onChange={e=>setBannerForm(f=>({...f,[k]:e.target.value}))} />
+                </div>
+              )
             ))}
 
             <div className="form-group">
@@ -2101,7 +2040,7 @@ export default function App() {
       <div id="produtos">
         <div className="section-header">
           <h2 className="section-title">
-            {category==="Todos" ? <span>Todos os <span style={{color:"var(--gold)"}}>Produtos</span></span> : <span style={{color:"var(--gold)"}}>{CAT_LABELS[category]}</span>}
+            {category==="Todos" ? <span>Todos os <span style={{color:"var(--gold)"}}>Produtos</span></span> : <span style={{color:"var(--gold)"}}>{categories.find(c=>c.id===category)?.label || category}</span>}
             <span style={{fontSize:13,color:"var(--muted)",fontFamily:"Inter,sans-serif",fontWeight:400,marginLeft:10}}>
               ({filtered.length} {filtered.length===1?"produto":"produtos"})
             </span>
