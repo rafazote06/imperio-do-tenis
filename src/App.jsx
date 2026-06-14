@@ -7,28 +7,33 @@ const SUPA_URL = "https://epjnpzwtkjibgdyvbwnb.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwam5wend0a2ppYmdkeXZid25iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NTIyNjIsImV4cCI6MjA5MjQyODI2Mn0.SKvhCXClYLCVo2giuR8KDJ0g4Emi0D-q0pAj92OTCt4";
 const SUPA_STORAGE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwam5wend0a2ppYmdkeXZid25iIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njg1MjI2MiwiZXhwIjoyMDkyNDI4MjYyfQ.3fbrAYw8a-U_IsXem3F7n2Jp48Sh5WDgtVYfC52-YXs";
 
+const supaHeaders = {
+  "apikey": SUPA_KEY,
+  "Authorization": `Bearer ${SUPA_KEY}`,
+  "Content-Type": "application/json",
+  "Prefer": "return=representation",
+};
+
+const supaFetch = async (path, opts = {}) => {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+    headers: supaHeaders,
+    ...opts,
+  });
+  return res.json();
+};
+
 const supa = {
-  from: (table) => {
-    const base = `${SUPA_URL}/rest/v1/${table}`;
-    const headers = {
-      "apikey": SUPA_KEY,
-      "Authorization": `Bearer ${SUPA_KEY}`,
-      "Content-Type": "application/json",
-      "Prefer": "return=representation",
-    };
-    return {
-      select: (cols = "*", opts = {}) => {
-        let url = `${base}?select=${cols}`;
-        if (opts.filter) url += `&${opts.filter}`;
-        if (opts.order)  url += `&order=${opts.order}`;
-        return fetch(url, { headers }).then(r => r.json());
-      },
-      insert: (data) => fetch(base, {
-        method: "POST", headers,
-        body: JSON.stringify(data),
-      }).then(r => r.json()),
-    };
-  },
+  from: (table) => ({
+    select: (cols = "*", opts = {}) => {
+      let url = `${table}?select=${cols}`;
+      if (opts.filter) url += `&${opts.filter}`;
+      return supaFetch(url);
+    },
+    insert: (data) => supaFetch(table, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  }),
 };
 
 const PIX_DISCOUNT = 0.05;
@@ -1367,7 +1372,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const data = await supa.from("produtos").select("*", { order: "created_at.desc" });
+      const data = await supaFetch("produtos?select=*&order=created_at.desc");
       setProducts(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar produtos"); }
     setLoading(false);
@@ -1376,7 +1381,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const loadPedidos = async () => {
     setLoading(true);
     try {
-      const data = await supa.from("pedidos").select("*", { order: "created_at.desc" });
+      const data = await supaFetch("pedidos?select=*&order=created_at.desc");
       setPedidos(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar pedidos"); }
     setLoading(false);
@@ -1385,7 +1390,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const loadBanners = async () => {
     setLoading(true);
     try {
-      const data = await supa.from("banners").select("*", { order: "ordem.asc" });
+      const data = await supaFetch("banners?select=*&order=ordem.asc");
       setBannerList(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar banners"); }
     setLoading(false);
@@ -1502,7 +1507,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
     setForm({ ...p, old_price: p.old_price||"" });
     // Carregar tamanhos
     try {
-      const data = await supa.from("produto_tamanhos").select("size,stock", { filter: `produto_id=eq.${p.id}` });
+      const data = await supaFetch(`produto_tamanhos?select=size,stock&produto_id=eq.${p.id}`);
       setSizes(Array.isArray(data) && data.length > 0 ? data : [{ size:"", stock:"" }]);
     } catch { setSizes([{ size:"", stock:"" }]); }
   };
@@ -1883,13 +1888,10 @@ export default function App() {
   useEffect(() => {
     const load = async () => {
       try {
-        const prods = await supa.from("produtos").select(
-          "id,cat,name,brand,description,price,old_price,stock,image",
-          { filter: "ativo=eq.true&order=created_at.asc" }
-        );
-        const sizes = await supa.from("produto_tamanhos").select("produto_id,size,stock");
-        const bans  = await supa.from("banners").select("*", { filter: "ativo=eq.true&order=ordem.asc" });
-        const cats  = await supa.from("categorias").select("id,label,ordem", { filter: "order=ordem.asc" });
+        const prods = await supaFetch("produtos?select=id,cat,name,brand,description,price,old_price,stock,image&ativo=eq.true&order=created_at.asc");
+        const sizes = await supaFetch("produto_tamanhos?select=produto_id,size,stock");
+        const bans  = await supaFetch("banners?select=*&ativo=eq.true&order=ordem.asc");
+        const cats  = await supaFetch("categorias?select=id,label,ordem&order=ordem.asc");
 
         const prodsFull = (Array.isArray(prods) ? prods : []).map(p => ({
           ...p,
