@@ -831,10 +831,38 @@ const JUROS = { 1:0, 2:0, 3:0.0701, 4:0.0791, 5:0.088, 6:0.0967, 7:0.1259, 8:0.1
 function CreditoParcelamento({ total, onSelect }) {
   const [parcelas, setParcelas] = useState(1);
   useEffect(()=>{ onSelect && onSelect(1); }, []);
+
+  // Maximo de parcelas baseado no valor total
+  const maxParcelas = () => {
+    if (total >= 1200) return 12;
+    if (total >= 1100) return 11;
+    if (total >= 1000) return 10;
+    if (total >= 900)  return 9;
+    if (total >= 800)  return 8;
+    if (total >= 700)  return 7;
+    if (total >= 600)  return 6;
+    if (total >= 500)  return 5;
+    if (total >= 400)  return 4;
+    if (total >= 300)  return 3;
+    if (total >= 200)  return 2;
+    return 1;
+  };
+
+  const max = maxParcelas();
+
   const calcValor = (n) => {
     const taxa = JUROS[n] || 0;
     return total * (1 + taxa) / n;
   };
+
+  // Garantir que parcelas selecionadas nao exceda o maximo
+  useEffect(() => {
+    if (parcelas > max) {
+      setParcelas(max);
+      onSelect && onSelect(max);
+    }
+  }, [max]);
+
   return (
     <div style={{marginTop:10}}>
       <div style={{fontSize:12,color:"var(--white)",fontWeight:700,marginBottom:8}}>Escolha o parcelamento:</div>
@@ -844,9 +872,9 @@ function CreditoParcelamento({ total, onSelect }) {
         style={{width:"100%",background:"#1a1a1a",border:"1px solid var(--gold3)",borderRadius:8,
           color:"var(--cream)",padding:"8px 12px",fontSize:13,cursor:"pointer",outline:"none"}}
       >
-        {Object.keys(JUROS).map(n=>(
+        {Array.from({length: max}, (_,i) => i+1).map(n=>(
           <option key={n} value={n}>
-            {n}x de {fmt(calcValor(+n))}{+n <= 2 ? " — sem juros" : ""}
+            {n}x de {fmt(calcValor(n))}{n <= 2 ? " — sem juros" : ""}
           </option>
         ))}
       </select>
