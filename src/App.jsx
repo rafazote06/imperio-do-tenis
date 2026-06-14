@@ -730,7 +730,7 @@ function ProductCard({ product, onOpen }) {
     <div className="card" onClick={() => onOpen(product)}>
       <div className="card-img-wrap">
         <img className="card-img" src={product.image} alt={product.name} loading="lazy" />
-        {product.stock <= 2 && product.stock > 0 && <span className="card-stock-low">Ultimas unidades</span>}
+        {product.stock <= 2 && product.stock > 0 && <span className="card-stock-low">Últimas unidades</span>}
       </div>
       <div className="card-body">
         <div className="card-brand">{product.brand}</div>
@@ -773,7 +773,7 @@ function ProductModal({ product, onClose, onAddCart }) {
         <div className="modal-install">ou 2x de {fmt(product.price/2)} sem juros</div>
         {product.stock <= 3 && <div className="modal-stock-warn">Apenas {product.stock} em estoque</div>}
         <div className="modal-desc">{product.description}</div>
-        <div className="modal-label">Tamanho / Variacao</div>
+        <div className="modal-label">Tamanho / Variação</div>
         <div className="sizes-grid">
           {product.sizes.map(s => (
             <button key={s.size}
@@ -787,7 +787,7 @@ function ProductModal({ product, onClose, onAddCart }) {
         {selSize && (() => {
           const st = product.sizes.find(s=>s.size===selSize)?.stock||0;
           return st > 0 && st <= 3
-            ? <div style={{fontSize:11,color:"#f0c850",marginBottom:8}}>Apenas {st} disponivel{st>1?"is":""} neste tamanho</div>
+            ? <div style={{fontSize:11,color:"#f0c850",marginBottom:8}}>Apenas {st} disponível{st>1?"is":""} neste tamanho</div>
             : null;
         })()}
         <div className="qty-row">
@@ -802,7 +802,7 @@ function ProductModal({ product, onClose, onAddCart }) {
           </div>
         </div>
         <button className="modal-add" disabled={!selSize} onClick={handleAdd}>
-          {selSize ? "COMPRAR — " + fmt(product.price * qty) : "Selecione uma opcao"}
+          {selSize ? "COMPRAR — " + fmt(product.price * qty) : "Selecione uma opção"}
         </button>
       </div>
     </div>
@@ -829,8 +829,8 @@ function MiniPopup({ item, onViewCart, onClose }) {
 
 const PAYMENT_METHODS = [
   { id:"pix",     label:"Pix",               desc:"5% de desconto",     discount:true  },
-  { id:"credito", label:"Cartao de Credito",  desc:"Ate 12x",            discount:false },
-  { id:"debito",  label:"Cartao de Debito",   desc:"A vista",            discount:false },
+  { id:"credito", label:"Cartao de Credito",  desc:"Até 12x",            discount:false },
+  { id:"debito",  label:"Cartao de Debito",   desc:"À vista",            discount:false },
   { id:"dinheiro",label:"Dinheiro",           desc:"Troco se precisar",  discount:false },
 ];
 
@@ -864,7 +864,7 @@ function CreditoParcelamento({ total, onSelect }) {
     return total * (1 + taxa) / n;
   };
 
-  // Garantir que parcelas selecionadas nao exceda o maximo
+  // Garantir que parcelas selecionadas não exceda o maximo
   useEffect(() => {
     if (parcelas > max) {
       setParcelas(max);
@@ -925,7 +925,7 @@ function CartDrawer({ items, onClose, onCheckout }) {
         </div>
 
         {localItems.length === 0 ? (
-          <div className="cart-empty">Seu carrinho esta vazio.</div>
+          <div className="cart-empty">Seu carrinho está vazio.</div>
         ) : (
           localItems.map((item,idx) => (
             <div className="cart-item" key={idx} style={{opacity:removingIdx===idx?0.3:1,transition:"opacity .2s"}}>
@@ -965,7 +965,7 @@ function CartDrawer({ items, onClose, onCheckout }) {
               <div className={"cart-total-box" + (isPix?" pix":"")}>
                 <span className="cart-total-label">{isPix ? "Total no Pix" : "Total"}</span>
                 <span className="cart-total-val">{fmt(total)}</span>
-                {isPix && <span className="cart-total-saving">Voce economiza {fmt(sub - total)}</span>}
+                {isPix && <span className="cart-total-saving">Você economiza {fmt(sub - total)}</span>}
                 {payment === "credito" && (
                   <CreditoParcelamento total={total} onSelect={setParcelas_cart} />
                 )}
@@ -1077,7 +1077,7 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
       const res  = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await res.json();
       if (data.erro) {
-        setCepError("CEP nao encontrado.");
+        setCepError("CEP não encontrado.");
         setForm(f=>({...f, address:"", neighborhood:"", city:"", state:""}));
       } else {
         setForm(f=>({
@@ -1106,7 +1106,7 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
     if (digits.length === 8) fetchCep(digits);
   };
 
-  const validate = () => {
+  const validaté = () => {
     const e = {};
     if (!form.name.trim())  e.name  = true;
     if (!form.phone.trim()) e.phone = true;
@@ -1136,7 +1136,7 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
           <button className="checkout-close" onClick={onClose}>&#x2715;</button>
         </div>
         <p className="checkout-subtitle">
-          Preencha seus dados. Voce sera redirecionado para o WhatsApp para confirmar o pedido.
+          Preencha seus dados. Você será redirecionado para o WhatsApp para confirmar o pedido.
         </p>
 
         {/* Resumo */}
@@ -1214,20 +1214,20 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
 
         {delivery === "retirada" && (
           <div style={{background:"#111",border:"1px solid var(--border)",borderRadius:10,padding:"12px 14px",marginTop:10,fontSize:12,color:"var(--muted)",lineHeight:1.7}}>
-            📍 Av. das Tipuanas, 710 — Palhoca, SC<br/>
-            🕐 Seg–Sex 09h–19h · Sab 09h–15h
+            📍 Av. das Tipuanas, 710 — Palhoça, SC<br/>
+            🕐 Seg–Sex 09h–19h · Sáb 09h–15h
           </div>
         )}
         {delivery === "entrega" && (
           <div style={{background:"#0e0b00",border:"1px solid var(--gold3)",borderRadius:10,padding:"10px 14px",marginTop:10,fontSize:12,color:"var(--muted)",lineHeight:1.7}}>
-            <div style={{color:"var(--gold)",fontWeight:700,marginBottom:6}}>Informacoes sobre entrega</div>
+            <div style={{color:"var(--gold)",fontWeight:700,marginBottom:6}}>Informações sobre entrega</div>
             <div style={{marginBottom:6}}>
-              <strong style={{color:"var(--white)"}}>Grande Florianopolis, Palhoca e Sao Jose:</strong><br/>
+              <strong style={{color:"var(--white)"}}>Grande Florianópolis, Palhoça e São Jose:</strong><br/>
               Entrega via <strong style={{color:"var(--white)"}}>99 ou Uber</strong> — frete negociado pelo WhatsApp.
             </div>
             <div>
               <strong style={{color:"var(--white)"}}>Todo o Brasil:</strong><br/>
-              Envio via <strong style={{color:"var(--white)"}}>Sedex</strong> — frete calculado pelo WhatsApp apos o pedido.
+              Envio via <strong style={{color:"var(--white)"}}>Sedex</strong> — frete calculado pelo WhatsApp após o pedido.
             </div>
           </div>
         )}
@@ -1240,7 +1240,7 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
                 <span>CEP *</span>
                 <a href="https://buscacepinter.correios.com.br" target="_blank" rel="noreferrer"
                   style={{fontSize:11,color:"var(--gold)",textDecoration:"none"}}>
-                  Nao sei meu CEP
+                  Não sei meu CEP
                 </a>
               </label>
               <div style={{position:"relative"}}>
@@ -1306,7 +1306,7 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
           Confirmar e ir para o WhatsApp
         </button>
         <p className="checkout-wpp-note">
-          Voce sera redirecionado para o WhatsApp para confirmar o pedido com a nossa equipe.
+          Você será redirecionado para o WhatsApp para confirmar o pedido com a nossa equipe.
         </p>
       </div>
     </div>
@@ -1346,7 +1346,7 @@ function PixModal({ total, orderInfo, onConfirm, onCancel }) {
 
   const handleConfirm = () => {
     const msg = [
-      "Ola! Acabei de pagar o pedido via Pix.",
+      "Olá! Acabei de pagar o pedido via Pix.",
       "",
       ...orderInfo.items.map((i,n)=>`${n+1}. ${i.name} (Tam. ${i.selectedSize}) — ${fmt(i.price)}`),
       "",
@@ -1373,7 +1373,7 @@ function PixModal({ total, orderInfo, onConfirm, onCancel }) {
       complement:     orderInfo.form.complement || null,
       neighborhood:   orderInfo.form.neighborhood || null,
       city:           orderInfo.form.city       || null,
-      state:          orderInfo.form.state      || null,
+      state:          orderInfo.form.staté      || null,
       comprovante:    false,
     }).catch(e => console.error("Erro ao salvar pedido Pix:", e));
 
@@ -1396,7 +1396,7 @@ function PixModal({ total, orderInfo, onConfirm, onCancel }) {
 
         <div className="pix-title">Pague com Pix</div>
         <div className="pix-amount">{fmt(total)}</div>
-        <div className="pix-amount-note">5% de desconto ja aplicado</div>
+        <div className="pix-amount-note">5% de desconto já aplicado</div>
 
         {/* Timer */}
         <div className="pix-timer-wrap">
@@ -1426,14 +1426,14 @@ function PixModal({ total, orderInfo, onConfirm, onCancel }) {
         {/* Instruções */}
         <ul className="pix-instructions">
           <li>1. Abra o app do seu banco</li>
-          <li>2. Acesse a area de Pix e escolha "Pagar"</li>
+          <li>2. Acesse a área de Pix e escolha "Pagar"</li>
           <li>3. Cole ou copie a chave CNPJ acima</li>
           <li>4. Confirme o valor de {fmt(total)}</li>
-          <li>5. Clique em "Ja paguei" e envie o comprovante</li>
+          <li>5. Clique em "Já paguei" e envie o comprovante</li>
         </ul>
 
         <button className="pix-confirm-btn" disabled={expired} onClick={handleConfirm}>
-          Ja paguei — Enviar comprovante pelo WhatsApp
+          Já paguei — Enviar comprovante pelo WhatsApp
         </button>
         <button className="pix-cancel-btn" onClick={onCancel}>
           Cancelar
@@ -1540,7 +1540,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   };
 
   const deleteCategoria = async (id) => {
-    if (!window.confirm(`Remover categoria "${id}"? Os produtos desta categoria ficarao sem categoria.`)) return;
+    if (!window.confirm(`Remover categoria "${id}"? Os produtos desta categoria ficarão sem categoria.`)) return;
     await fetch(`${SUPA_URL}/rest/v1/categorias?id=eq.${id}`, {
       method: "DELETE",
       headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` },
@@ -1824,7 +1824,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
             {[
               {k:"name",        l:"Nome *"},
               {k:"brand",       l:"Marca"},
-              {k:"description", l:"Descricao"},
+              {k:"description", l:"Descrição"},
             ].map(({k,l})=>(
               <div className="form-group" key={k}>
                 <label className="form-label">{l}</label>
@@ -1836,7 +1836,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
             ))}
 
 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-              {[{k:"price",l:"Preco *"},{k:"old_price",l:"Preco antigo"},{k:"stock",l:"Estoque"}].map(({k,l})=>(
+              {[{k:"price",l:"Preço *"},{k:"old_price",l:"Preço antigo"},{k:"stock",l:"Estoque"}].map(({k,l})=>(
                 <div className="form-group" key={k}>
                   <label className="form-label">{l}</label>
                   <input className="form-input" type="number" value={form[k]||""} onChange={e=>setForm({...form,[k]:e.target.value})} />
@@ -1853,7 +1853,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
 
             {/* Tamanhos */}
             <div style={{marginBottom:14}}>
-              <label className="form-label" style={{marginBottom:8,display:"block"}}>Tamanhos / Variacoes</label>
+              <label className="form-label" style={{marginBottom:8,display:"block"}}>Tamanhos / Variações</label>
               {sizes.map((s,i)=>(
                 <div key={i} style={{display:"flex",gap:8,marginBottom:8,alignItems:"center"}}>
                   <input className="form-input" placeholder="Ex: 40 ou P ou 100ml"
@@ -1926,12 +1926,12 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
             </div>
 
 {[
-              {k:"title",    l:"Titulo *",        ph:"Ex: Nike Air Force 1"},
+              {k:"title",    l:"Título *",        ph:"Ex: Nike Air Force 1"},
               {k:"tag",      l:"Tag (topo)",      ph:"Ex: Oferta Especial"},
-              {k:"subtitle", l:"Subtitulo",       ph:"Ex: O classico que nunca sai de moda"},
+              {k:"subtitle", l:"Subtítulo",       ph:"Ex: O classico que nunca sai de moda"},
               {k:"__upload__", l:"", ph:""},
-              {k:"price",    l:"Preco",           ph:"Ex: R$ 599,90"},
-              {k:"old_price",l:"Preco antigo",    ph:"Ex: R$ 749,90"},
+              {k:"price",    l:"Preço",           ph:"Ex: R$ 599,90"},
+              {k:"old_price",l:"Preço antigo",    ph:"Ex: R$ 749,90"},
               {k:"highlight",l:"Destaque (badge)",ph:"Ex: 20% OFF"},
             ].map(({k,l,ph})=>(
               k === "__upload__" ? (
@@ -1965,7 +1965,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
             ))}
 
             <div className="form-group">
-              <label className="form-label">Ordem de exibicao</label>
+              <label className="form-label">Ordem de exibição</label>
               <input className="form-input" type="number" value={bannerForm.ordem||0}
                 onChange={e=>setBannerForm(f=>({...f,ordem:e.target.value}))} />
             </div>
@@ -2022,7 +2022,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
         {!editing && !editingBanner && tab==="categorias" && (
           <>
             <div style={{fontSize:11,color:"var(--muted)",marginBottom:12,lineHeight:1.6}}>
-              Gerencie as categorias da loja. Remover uma categoria nao apaga os produtos dela.
+              Gerencie as categorias da loja. Remover uma categoria não apaga os produtos dela.
             </div>
             <div style={{display:"flex",gap:8,marginBottom:16}}>
               <input className="form-input" placeholder="ID (ex: Tenis)" value={newCatId} onChange={e=>setNewCatId(e.target.value)} style={{flex:1}} />
@@ -2172,15 +2172,15 @@ export default function App() {
     const valorParcela = totalCredito / (checkoutData.parcelas||1);
     const parcelasLabel = checkoutData.parcelas > 1
       ? `${checkoutData.parcelas}x de ${fmt(valorParcela)}${checkoutData.parcelas<=2?" (sem juros)":" com juros"} — total ${fmt(totalCredito)}`
-      : `1x de ${fmt(total)} (a vista)`;
+      : `1x de ${fmt(total)} (à vista)`;
     const payLabel = payment === "credito"
       ? `Cartao de Credito — ${parcelasLabel}`
       : { debito:"Cartao de Debito", dinheiro:"Dinheiro" }[payment] || payment;
     const entrega  = delivery === "retirada"
       ? "Retirada na loja"
-      : `Entrega — ${form.address}, ${form.number}${form.complement ? " " + form.complement : ""}, ${form.neighborhood ? form.neighborhood + ", " : ""}${form.city}${form.state ? "/" + form.state : ""}, CEP ${form.cep}`;
+      : `Entrega — ${form.address}, ${form.number}${form.complement ? " " + form.complement : ""}, ${form.neighborhood ? form.neighborhood + ", " : ""}${form.city}${form.staté ? "/" + form.staté : ""}, CEP ${form.cep}`;
     const msg = [
-      "Ola! Gostaria de finalizar meu pedido:",
+      "Olá! Gostaria de finalizar meu pedido:",
       "",
       lines,
       "",
@@ -2204,7 +2204,7 @@ export default function App() {
       complement:     form.complement || null,
       neighborhood:   form.neighborhood || null,
       city:           form.city       || null,
-      state:          form.state      || null,
+      state:          form.staté      || null,
     }).catch(e => console.error("Erro ao salvar pedido:", e));
 
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
@@ -2224,7 +2224,7 @@ export default function App() {
         <div className="nav-top">
           <div className="nav-logo" onClick={()=>{setCategory("Todos");setSearch("");}}>
             <img src={LOGO_SRC} alt="Logo" />
-            Imperio do Tenis
+            Império do Tênis
           </div>
           <div className="nav-search">
             <input placeholder="🔍 Buscar produto, marca..." value={search} onChange={e=>setSearch(e.target.value)} />
@@ -2244,12 +2244,12 @@ export default function App() {
 
       <section className="hero">
         <div className="hero-logo-circle">
-          <img src={LOGO_SRC} className="hero-logo-img" alt="Imperio do Tenis" />
+          <img src={LOGO_SRC} className="hero-logo-img" alt="Império do Tênis" />
         </div>
-        <p className="hero-tagline">A MELHOR LOJA DE PALHOCA</p>
+        <p className="hero-tagline">A MELHOR LOJA DE PALHOÇA</p>
         <div className="hero-info">
-          <span>🕐 Seg–Sex 09h–19h · Sab 09h–15h</span>
-          <span>📍 Av. das Tipuanas, 710 — Palhoca</span>
+          <span>🕐 Seg–Sex 09h–19h · Sáb 09h–15h</span>
+          <span>📍 Av. das Tipuanas, 710 — Palhoça</span>
           <span>Enviamos para todo o Brasil</span>
         </div>
         <div className="hero-cta">
@@ -2318,8 +2318,8 @@ export default function App() {
           <div className="footer-col">
             <h4>Contato</h4>
             <a href={"https://wa.me/" + WHATSAPP_NUMBER} target="_blank" rel="noreferrer">💬 WhatsApp</a>
-            <p>📍 Av. das Tipuanas, 710 — Palhoca, SC</p>
-            <p>🕐 Seg–Sex 09h–19h · Sab 09h–15h</p>
+            <p>📍 Av. das Tipuanas, 710 — Palhoça, SC</p>
+            <p>🕐 Seg–Sex 09h–19h · Sáb 09h–15h</p>
             <p>contato@imperiotenis.com.br</p>
           </div>
           <div className="footer-col">
@@ -2336,8 +2336,8 @@ export default function App() {
               <span key={p} className="pay-badge">{p}</span>
             ))}
           </div>
-          <span className="footer-admin-link" onClick={()=>setAdminMode("login")}>Area administrativa</span>
-          <div className="footer-copy">2024 Imperio do Tenis — Todos os direitos reservados — Palhoca, SC</div>
+          <span className="footer-admin-link" onClick={()=>setAdminMode("login")}>Área administrativa</span>
+          <div className="footer-copy">2024 Império do Tênis — Todos os direitos reservados — Palhoça, SC</div>
         </div>
       </footer>
 
