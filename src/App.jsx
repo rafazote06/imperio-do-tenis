@@ -779,17 +779,26 @@ function ProductModal({ product, onClose, onAddCart }) {
             <button key={s.size}
               className={"size-btn" + (s.stock===0?" out":"") + (selSize===s.size?" selected":"")}
               disabled={s.stock===0}
-              onClick={() => setSelSize(s.size)}>
+              onClick={() => { setSelSize(s.size); setQty(1); }}>
               {s.size}{s.stock===0?" (esgotado)":""}
             </button>
           ))}
         </div>
+        {selSize && (() => {
+          const st = product.sizes.find(s=>s.size===selSize)?.stock||0;
+          return st > 0 && st <= 3
+            ? <div style={{fontSize:11,color:"#f0c850",marginBottom:8}}>Apenas {st} disponivel{st>1?"is":""} neste tamanho</div>
+            : null;
+        })()}
         <div className="qty-row">
           <span className="qty-label">Quantidade</span>
           <div className="qty-ctrl">
             <button className="qty-btn" onClick={() => setQty(q => Math.max(1,q-1))}>-</button>
             <span className="qty-num">{qty}</span>
-            <button className="qty-btn" onClick={() => setQty(q => q+1)}>+</button>
+            <button className="qty-btn" onClick={() => {
+              const sizeStock = product.sizes.find(s=>s.size===selSize)?.stock || 1;
+              setQty(q => Math.min(q+1, sizeStock));
+            }}>+</button>
           </div>
         </div>
         <button className="modal-add" disabled={!selSize} onClick={handleAdd}>
@@ -1506,7 +1515,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const loadCategorias = async () => {
     setLoading(true);
     try {
-      const data = await supaFetch("categorias?select=*&order=ordem.asc");
+      const data = await supaFetch("categorias?select=id,label,ordem&order=ordem.asc");
       setCatList(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar categorias"); }
     setLoading(false);
@@ -1843,7 +1852,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
                 <div key={i} style={{display:"flex",gap:8,marginBottom:8,alignItems:"center"}}>
                   <input className="form-input" placeholder="Ex: 40 ou P ou 100ml"
                     value={s.size} style={{flex:2}}
-                    onChange={e=>setSizes(sz=>sz.map((x,j)=>j===i?{...x,size:e.target.value}:x))} />
+                    onChange={e=>setSizes(sz=>sz.map((x,j)=>j===i?{...x,size:e.target.value.toUpperCase()}:x))} />
                   <input className="form-input" placeholder="Qtd" type="number"
                     value={s.stock} style={{flex:1}}
                     onChange={e=>setSizes(sz=>sz.map((x,j)=>j===i?{...x,stock:e.target.value}:x))} />
