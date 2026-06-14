@@ -62,8 +62,8 @@ const ANNOUNCEMENTS = [
   "ENVIAMOS PARA TODO O BRASIL",
 ];
 
-const fmt  = (n) => n.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
-const pixP = (n) => n * (1 - PIX_DISCOUNT);
+const fmt  = (n) => (n != null ? Number(n).toLocaleString("pt-BR", { style:"currency", currency:"BRL" }) : "R$ 0,00");
+const pixP = (n) => (n != null ? Number(n) * (1 - PIX_DISCOUNT) : 0);
 const disc = (old, cur) => Math.round((1 - cur / old) * 100);
 
 const css = `
@@ -1895,11 +1895,13 @@ export default function App() {
 
         const prodsFull = (Array.isArray(prods) ? prods : []).map(p => ({
           ...p,
-          oldPrice: p.old_price,
+          price:    Number(p.price)     || 0,
+          oldPrice: Number(p.old_price) || 0,
+          stock:    Number(p.stock)     || 0,
           isNew: false,
           sizes: (Array.isArray(sizes) ? sizes : [])
             .filter(s => s.produto_id === p.id)
-            .map(s => ({ size: s.size, stock: s.stock })),
+            .map(s => ({ size: s.size, stock: Number(s.stock) || 0 })),
         }));
 
         if (prodsFull.length > 0) setProducts(prodsFull);
