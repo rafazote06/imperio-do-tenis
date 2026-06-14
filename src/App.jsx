@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 const WHATSAPP_NUMBER = "554899940366";
+const CEP_ORIGEM = "88136300"; // Palhoca - SC
 
 // ── Supabase ──────────────────────────────────────────
 const SUPA_URL = "https://epjnpzwtkjibgdyvbwnb.supabase.co";
@@ -44,6 +45,34 @@ const supa = {
 };
 
 const PIX_DISCOUNT = 0.05;
+
+const calcularFrete = async (cepDestino) => {
+  try {
+    const cep = cepDestino.replace(/\D/g, "");
+    if (cep.length !== 8) return null;
+    // Usar API dos Correios via proxy público
+    const res = await fetch(
+      `https://viacep.com.br/ws/${cep}/json/`
+    );
+    const data = await res.json();
+    if (data.erro) return null;
+    // Retornar frete fixo por estado (tabela simplificada)
+    const estado = data.uf;
+    const tabela = {
+      SC: 18, RS: 22, PR: 22,  // Sul
+      SP: 28, RJ: 32, MG: 30, ES: 32,  // Sudeste
+      GO: 35, DF: 35, MT: 38, MS: 35,  // Centro-Oeste
+      BA: 38, SE: 40, AL: 40, PE: 40, PB: 40, RN: 42, CE: 42, PI: 44, MA: 44,  // Nordeste
+      PA: 45, AM: 55, RO: 50, AC: 60, RR: 60, AP: 55, TO: 45,  // Norte
+    };
+    // SC local = 99/Uber, outros = Sedex
+    if (estado === "SC") return { tipo: "local", valor: null };
+    const valor = tabela[estado] || 45;
+    return { tipo: "sedex", valor, prazo: estado === "SP" || estado === "RJ" ? "2-3 dias úteis" : "3-5 dias úteis", uf: estado };
+  } catch {
+    return null;
+  }
+};
 
 
 const BANNERS = [];
@@ -1064,6 +1093,8 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
   const [errors, setErrors]     = useState({});
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError,   setCepError]   = useState("");
+  const [frete,      setFrete]      = useState(null);
+  const [freteLoading, setFreteLoading] = useState(false);
 
   const set = (k, v) => { setForm(f=>({...f,[k]:v})); setErrors(e=>({...e,[k]:false})); };
 
@@ -1088,8 +1119,12 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
           state:        data.uf          || "",
         }));
         setErrors(e=>({...e, address:false, cep:false}));
-        // focar no campo numero
         setTimeout(()=>{ document.getElementById("checkout-number")?.focus(); }, 100);
+        // Calcular frete
+        setFreteLoading(true);
+        const resultado = await calcularFrete(cep);
+        setFrete(resultado);
+        setFreteLoading(false);
       }
     } catch {
       setCepError("Erro ao buscar CEP. Tente novamente.");
@@ -1121,7 +1156,7 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
 
   const handleConfirm = () => {
     if (!validate()) return;
-    onConfirm({ form, delivery });
+    onConfirm({ form, delivery, frete });
   };
 
   const isPix    = payment === "pix";
@@ -1299,6 +1334,36 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
                   value={form.complement} onChange={e=>set("complement",e.target.value)} />
               </div>
             </div>
+
+            {/* Resultado do frete */}
+            {freteLoading && (
+              <div style={{textAlign:"center",padding:"10px",fontSize:12,color:"var(--muted)"}}>
+                Calculando frete...
+              </div>
+            )}
+            {frete && !freteLoading && (
+              <div style={{
+                background: frete.tipo==="local" ? "#0a1a0a" : "#0e0b00",
+                border: `1px solid ${frete.tipo==="local" ? "var(--pix)" : "var(--gold3)"}`,
+                borderRadius:10, padding:"10px 14px", marginTop:8, fontSize:12, lineHeight:1.7
+              }}>
+                {frete.tipo === "local" ? (
+                  <>
+                    <div style={{color:"var(--pix)",fontWeight:700,marginBottom:2}}>📍 Região de entrega local</div>
+                    <div style={{color:"var(--muted)"}}>Entrega via <strong style={{color:"var(--white)"}}>99 ou Uber</strong> — frete negociado pelo WhatsApp após o pedido.</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{color:"var(--gold)",fontWeight:700,marginBottom:2}}>📦 Frete estimado — Sedex</div>
+                    <div style={{color:"var(--muted)"}}>
+                      Valor estimado: <strong style={{color:"var(--white)"}}>R$ {frete.valor},00</strong><br/>
+                      Prazo: <strong style={{color:"var(--white)"}}>{frete.prazo}</strong><br/>
+                      <span style={{fontSize:11,color:"#666"}}>*Valor final confirmado pelo WhatsApp após o pedido.</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </>
         )}
 
@@ -2153,18 +2218,19 @@ export default function App() {
   }, []);
 
   const checkout = (items, payment, total, parcelas) => {
-    setCheckoutData({ items, payment, total, parcelas });
+    setCheckoutData({ items, payment, total, parcelas, frete: null });
     setCartOpen(false);
   };
 
-  const confirmOrder = ({ form, delivery, parcelas }) => {
+  const confirmOrder = ({ form, delivery, parcelas, frete }) => {
     const { items, payment, total } = checkoutData;
 
     if (payment === "pix") {
-      setPixData({ items, total, form, delivery });
+      setPixData({ items, total, form, delivery, frete });
       setCheckoutData(null);
       return;
     }
+    checkoutData.frete = frete;
 
     const lines    = items.map((i,n)=>`${n+1}. ${i.name} (Tam. ${i.selectedSize}) — ${fmt(i.price)}`).join("%0A");
     const taxa = JUROS[checkoutData.parcelas||1]||0;
