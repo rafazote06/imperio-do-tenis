@@ -2227,8 +2227,17 @@ export default function App() {
             Império do Tênis
           </div>
           <div className="nav-search">
-            <input placeholder="🔍 Buscar produto, marca..." value={search} onChange={e=>setSearch(e.target.value)} />
-            <button className="nav-search-btn">Buscar</button>
+            <input
+              placeholder="🔍 Buscar produto, marca..."
+              value={search}
+              onChange={e=>setSearch(e.target.value)}
+              onKeyDown={e=>{
+                if(e.key==="Enter") document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"});
+              }}
+            />
+            <button className="nav-search-btn" onClick={()=>document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"})}>
+              Buscar
+            </button>
           </div>
           <div className="nav-actions">
             <a className="nav-wpp" href={"https://wa.me/" + WHATSAPP_NUMBER} target="_blank" rel="noreferrer">
