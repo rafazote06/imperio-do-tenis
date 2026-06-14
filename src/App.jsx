@@ -835,7 +835,6 @@ function CreditoParcelamento({ total, onSelect }) {
     const taxa = JUROS[n] || 0;
     return total * (1 + taxa) / n;
   };
-  const totalComJuros = (n) => total * (1 + (JUROS[n]||0));
   return (
     <div style={{marginTop:10}}>
       <div style={{fontSize:12,color:"var(--white)",fontWeight:700,marginBottom:8}}>Escolha o parcelamento:</div>
@@ -847,19 +846,10 @@ function CreditoParcelamento({ total, onSelect }) {
       >
         {Object.keys(JUROS).map(n=>(
           <option key={n} value={n}>
-            {n}x de {fmt(calcValor(+n))}
-            {+n <= 2 ? " (sem juros)" : ` — total ${fmt(totalComJuros(+n))}`}
+            {n}x de {fmt(calcValor(+n))}{+n <= 2 ? " — sem juros" : ""}
           </option>
         ))}
       </select>
-      {parcelas > 2 && (
-        <div style={{fontSize:11,color:"#f0c850",marginTop:4}}>
-          Juros de {((JUROS[parcelas]||0)*100).toFixed(2)}% — total {fmt(totalComJuros(parcelas))}
-        </div>
-      )}
-      {parcelas <= 2 && (
-        <div style={{fontSize:11,color:"var(--pix)",marginTop:4}}>Sem juros!</div>
-      )}
     </div>
   );
 }
