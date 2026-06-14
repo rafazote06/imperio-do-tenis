@@ -1372,7 +1372,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const data = await supaFetch("produtos?select=*&order=created_at.desc");
+      const data = await supaFetch("produtos?select=*");
       setProducts(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar produtos"); }
     setLoading(false);
@@ -1381,7 +1381,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const loadPedidos = async () => {
     setLoading(true);
     try {
-      const data = await supaFetch("pedidos?select=*&order=created_at.desc");
+      const data = await supaFetch("pedidos?select=*");
       setPedidos(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar pedidos"); }
     setLoading(false);
@@ -1888,7 +1888,7 @@ export default function App() {
   useEffect(() => {
     const load = async () => {
       try {
-        const prods = await supaFetch("produtos?select=id,cat,name,brand,description,price,old_price,stock,image&ativo=eq.true&order=created_at.asc");
+        const prods = await supaFetch("produtos?select=id,cat,name,brand,description,price,old_price,stock,image&ativo=eq.true");
         const sizes = await supaFetch("produto_tamanhos?select=produto_id,size,stock");
         const bans  = await supaFetch("banners?select=*&ativo=eq.true&order=ordem.asc");
         const cats  = await supaFetch("categorias?select=id,label,ordem&order=ordem.asc");
