@@ -819,11 +819,50 @@ function MiniPopup({ item, onViewCart, onClose }) {
 }
 
 const PAYMENT_METHODS = [
-  { id:"pix",     label:"Pix",              desc:"5% de desconto",    discount:true  },
-  { id:"credito", label:"Cartao de Credito", desc:"1x ou 2x sem juros", discount:false },
-  { id:"debito",  label:"Cartao de Debito",  desc:"A vista",           discount:false },
-  { id:"dinheiro",label:"Dinheiro",          desc:"Troco se precisar",  discount:false },
+  { id:"pix",     label:"Pix",               desc:"5% de desconto",     discount:true  },
+  { id:"credito", label:"Cartao de Credito",  desc:"Ate 12x",            discount:false },
+  { id:"debito",  label:"Cartao de Debito",   desc:"A vista",            discount:false },
+  { id:"dinheiro",label:"Dinheiro",           desc:"Troco se precisar",  discount:false },
 ];
+
+// Juros por parcela (tabela Price)
+const JUROS = { 1:0, 2:0, 3:0.0701, 4:0.0791, 5:0.088, 6:0.0967, 7:0.1259, 8:0.1342, 9:0.1425, 10:0.1506, 11:0.1587, 12:0.1666 };
+
+function CreditoParcelamento({ total, onSelect }) {
+  const [parcelas, setParcelas] = useState(1);
+  useEffect(()=>{ onSelect && onSelect(1); }, []);
+  const calcValor = (n) => {
+    const taxa = JUROS[n] || 0;
+    return total * (1 + taxa) / n;
+  };
+  const totalComJuros = (n) => total * (1 + (JUROS[n]||0));
+  return (
+    <div style={{marginTop:10}}>
+      <div style={{fontSize:12,color:"var(--white)",fontWeight:700,marginBottom:8}}>Escolha o parcelamento:</div>
+      <select
+        value={parcelas}
+        onChange={e=>{ setParcelas(+e.target.value); onSelect && onSelect(+e.target.value); }}
+        style={{width:"100%",background:"#1a1a1a",border:"1px solid var(--gold3)",borderRadius:8,
+          color:"var(--cream)",padding:"8px 12px",fontSize:13,cursor:"pointer",outline:"none"}}
+      >
+        {Object.keys(JUROS).map(n=>(
+          <option key={n} value={n}>
+            {n}x de {fmt(calcValor(+n))}
+            {+n <= 2 ? " (sem juros)" : ` — total ${fmt(totalComJuros(+n))}`}
+          </option>
+        ))}
+      </select>
+      {parcelas > 2 && (
+        <div style={{fontSize:11,color:"#f0c850",marginTop:4}}>
+          Juros de {((JUROS[parcelas]||0)*100).toFixed(2)}% — total {fmt(totalComJuros(parcelas))}
+        </div>
+      )}
+      {parcelas <= 2 && (
+        <div style={{fontSize:11,color:"var(--pix)",marginTop:4}}>Sem juros!</div>
+      )}
+    </div>
+  );
+}
 
 function CartDrawer({ items, onClose, onCheckout }) {
   const [payment, setPayment] = useState(null);
@@ -842,9 +881,11 @@ function CartDrawer({ items, onClose, onCheckout }) {
     }, 200);
   };
 
+  const [parcelas, setParcelas_cart] = useState(1);
+
   const handleCheckout = () => {
     if (!payment) { alert("Selecione a forma de pagamento para continuar."); return; }
-    onCheckout(localItems, payment, total);
+    onCheckout(localItems, payment, total, payment === "credito" ? parcelas : null);
   };
 
   return (
@@ -899,11 +940,7 @@ function CartDrawer({ items, onClose, onCheckout }) {
                 <span className="cart-total-val">{fmt(total)}</span>
                 {isPix && <span className="cart-total-saving">Voce economiza {fmt(sub - total)}</span>}
                 {payment === "credito" && (
-                  <div style={{marginTop:8,fontSize:12,color:"var(--muted)"}}>
-                    <div style={{color:"var(--white)",fontWeight:600}}>Opcoes no cartao:</div>
-                    <div>1x de {fmt(total)} (a vista)</div>
-                    <div>2x de {fmt(total/2)} sem juros</div>
-                  </div>
+                  <CreditoParcelamento total={total} onSelect={setParcelas_cart} />
                 )}
               </div>
             )}
@@ -951,14 +988,14 @@ function BannerCarousel({ banners: propBanners }) {
 
         {/* Conteudo */}
         <div className="banner-content">
-          <span className="banner-tag" style={{borderColor: b.accent, color: b.accent}}>{b.tag}</span>
+          {b.tag && <span className="banner-tag" style={{borderColor: b.accent||"var(--gold)", color: b.accent||"var(--gold)"}}>{b.tag}</span>}
           <h2 className="banner-title">{b.title}</h2>
-          <p className="banner-subtitle">{b.subtitle}</p>
+          {b.subtitle && <p className="banner-subtitle">{b.subtitle}</p>}
           <div className="banner-prices">
-            <span className="banner-old">{b.oldPrice}</span>
-            <span className="banner-price">{b.price}</span>
+            {b.old_price && <span className="banner-old">{b.old_price}</span>}
+            {b.price && <span className="banner-price">{b.price}</span>}
           </div>
-          <div className="banner-highlight" style={{background: b.accent}}>{b.highlight}</div>
+          {b.highlight && <div className="banner-highlight" style={{background: b.accent||"var(--gold)"}}>{b.highlight}</div>}
         </div>
       </div>
 
@@ -972,7 +1009,7 @@ function BannerCarousel({ banners: propBanners }) {
           <button
             key={i}
             className={"banner-dot" + (i === current ? " active" : "")}
-            style={i === current ? {background: b.accent} : {}}
+            style={i === current ? {background: b.accent||"var(--gold)"} : {}}
             onClick={() => { setPaused(true); setCurrent(i); }}
           />
         ))}
@@ -984,7 +1021,7 @@ function BannerCarousel({ banners: propBanners }) {
           className="banner-progress-bar"
           key={current + "-" + paused}
           style={{
-            background: b.accent,
+            background: b.accent||"var(--gold)",
             animation: paused ? "none" : "progressBar 4.5s linear forwards"
           }}
         />
@@ -1399,6 +1436,9 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const [products,    setProducts]   = useState([]);
   const [pedidos,     setPedidos]    = useState([]);
   const [bannerList,  setBannerList] = useState([]);
+  const [catList,     setCatList]     = useState([]);
+  const [newCatId,    setNewCatId]    = useState("");
+  const [newCatLabel, setNewCatLabel] = useState("");
   const [editing,     setEditing]    = useState(null);
   const [editingBanner, setEditingBanner] = useState(null);
   const [sizes,       setSizes]      = useState([{ size:"", stock:"" }]);
@@ -1413,8 +1453,9 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
 
   useEffect(() => { loadProducts(); }, []);
   useEffect(() => {
-    if (tab === "pedidos") loadPedidos();
-    if (tab === "banners") loadBanners();
+    if (tab === "pedidos")    loadPedidos();
+    if (tab === "banners")    loadBanners();
+    if (tab === "categorias") loadCategorias();
   }, [tab]);
 
   const loadProducts = async () => {
@@ -1429,7 +1470,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const loadPedidos = async () => {
     setLoading(true);
     try {
-      const data = await supaFetch("pedidos?select=*");
+      const data = await supaFetch("pedidos?select=id,customer_name,customer_phone,items,total,payment,delivery_type,address,number,city,state,status,comprovante");
       setPedidos(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar pedidos"); }
     setLoading(false);
@@ -1442,6 +1483,37 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
       setBannerList(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar banners"); }
     setLoading(false);
+  };
+
+  const loadCategorias = async () => {
+    setLoading(true);
+    try {
+      const data = await supaFetch("categorias?select=*&order=ordem.asc");
+      setCatList(Array.isArray(data) ? data : []);
+    } catch(e) { showMsg("Erro ao carregar categorias"); }
+    setLoading(false);
+  };
+
+  const addCategoria = async () => {
+    if (!newCatId.trim() || !newCatLabel.trim()) { showMsg("Preencha ID e nome"); return; }
+    await fetch(`${SUPA_URL}/rest/v1/categorias`, {
+      method: "POST",
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({ id: newCatId.trim(), label: newCatLabel.trim(), ordem: catList.length + 1 }),
+    });
+    setNewCatId(""); setNewCatLabel("");
+    showMsg("Categoria criada!");
+    await loadCategorias();
+  };
+
+  const deleteCategoria = async (id) => {
+    if (!window.confirm(`Remover categoria "${id}"? Os produtos desta categoria ficarao sem categoria.`)) return;
+    await fetch(`${SUPA_URL}/rest/v1/categorias?id=eq.${id}`, {
+      method: "DELETE",
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` },
+    });
+    showMsg("Categoria removida!");
+    await loadCategorias();
   };
 
   const openNewBanner = () => {
@@ -1667,8 +1739,9 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
           <div style={{display:"flex",gap:6,marginBottom:20}}>
             {[
               {id:"produtos", label:`Produtos (${products.length})`},
-              {id:"banners",  label:`Banners (${bannerList.length})`},
-              {id:"pedidos",  label:`Pedidos (${pedidos.length})`},
+              {id:"banners",     label:`Banners (${bannerList.length})`},
+              {id:"categorias",  label:`Categorias`},
+              {id:"pedidos",     label:`Pedidos (${pedidos.length})`},
             ].map(t=>(
               <button key={t.id} onClick={()=>setTab(t.id)}
                 style={{flex:1,padding:"8px 4px",borderRadius:8,border:"1px solid",
@@ -1912,6 +1985,33 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
           </>
         )}
 
+        {/* ── CATEGORIAS ── */}
+        {!editing && !editingBanner && tab==="categorias" && (
+          <>
+            <div style={{fontSize:11,color:"var(--muted)",marginBottom:12,lineHeight:1.6}}>
+              Gerencie as categorias da loja. Remover uma categoria nao apaga os produtos dela.
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:16}}>
+              <input className="form-input" placeholder="ID (ex: Tenis)" value={newCatId} onChange={e=>setNewCatId(e.target.value)} style={{flex:1}} />
+              <input className="form-input" placeholder="Nome exibido" value={newCatLabel} onChange={e=>setNewCatLabel(e.target.value)} style={{flex:1}} />
+              <button className="btn-gold" style={{padding:"10px 14px",flexShrink:0}} onClick={addCategoria}>+</button>
+            </div>
+            {loading ? (
+              <div style={{textAlign:"center",padding:"20px 0",color:"var(--muted)",fontSize:13}}>Carregando...</div>
+            ) : catList.length === 0 ? (
+              <div style={{textAlign:"center",padding:"20px 0",color:"var(--muted)",fontSize:13}}>Nenhuma categoria.</div>
+            ) : catList.map(c=>(
+              <div key={c.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+                <div>
+                  <div style={{fontSize:13,color:"var(--white)",fontWeight:600}}>{c.label}</div>
+                  <div style={{fontSize:11,color:"var(--muted)"}}>ID: {c.id} · ordem: {c.ordem}</div>
+                </div>
+                <button style={{background:"none",border:"none",color:"#e55",cursor:"pointer",fontSize:16}} onClick={()=>deleteCategoria(c.id)}>x</button>
+              </div>
+            ))}
+          </>
+        )}
+
         {/* ── LISTA PEDIDOS ── */}
         {!editing && !editingBanner && tab==="pedidos" && (
           <>
@@ -1924,8 +2024,8 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
               <div key={p.id} style={{background:"#111",border:"1px solid var(--border)",borderRadius:10,padding:"12px 14px",marginBottom:10}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
                   <div>
-                    <div style={{fontSize:13,fontWeight:700,color:"var(--white)"}}>{p.customer_name}</div>
-                    <div style={{fontSize:11,color:"var(--muted)"}}>{p.customer_phone}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:"var(--white)"}}>{p.customer_name||"—"}</div>
+                    <div style={{fontSize:11,color:"var(--muted)"}}>{p.customer_phone||"—"}</div>
                   </div>
                   <div style={{textAlign:"right"}}>
                     <div style={{fontSize:14,fontWeight:900,color:"var(--gold)"}}>{fmt(p.total)}</div>
@@ -1933,7 +2033,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
                   </div>
                 </div>
                 <div style={{fontSize:11,color:"var(--muted)",marginBottom:8}}>
-                  {p.delivery_type==="retirada" ? "Retirada na loja" : `${p.address}, ${p.number} — ${p.city}/${p.state}`}
+                  {p.delivery_type==="retirada" ? "Retirada na loja" : `${p.address||""}, ${p.number||""} — ${p.city||""}/${p.state||""}`}
                 </div>
                 {Array.isArray(p.items) && p.items.map((item,i)=>(
                   <div key={i} style={{fontSize:11,color:"#666",marginBottom:2}}>• {item.name} (Tam. {item.selectedSize||item.size}) — {fmt(item.price)}</div>
@@ -1979,7 +2079,7 @@ export default function App() {
       try {
         const prods = await supaFetch("produtos?select=id,cat,name,brand,description,price,old_price,stock,image&ativo=eq.true");
         const sizes = await supaFetch("produto_tamanhos?select=produto_id,size,stock");
-        const bans  = await supaFetch("banners?select=*&ativo=eq.true&order=ordem.asc");
+        const bans  = await supaFetch("banners?select=*&order=ordem.asc");
         const cats  = await supaFetch("categorias?select=id,label,ordem&order=ordem.asc");
 
         const prodsFull = (Array.isArray(prods) ? prods : []).map(p => ({
@@ -2019,12 +2119,12 @@ export default function App() {
     setLastAdded(item);
   }, []);
 
-  const checkout = (items, payment, total) => {
-    setCheckoutData({ items, payment, total });
+  const checkout = (items, payment, total, parcelas) => {
+    setCheckoutData({ items, payment, total, parcelas });
     setCartOpen(false);
   };
 
-  const confirmOrder = ({ form, delivery }) => {
+  const confirmOrder = ({ form, delivery, parcelas }) => {
     const { items, payment, total } = checkoutData;
 
     if (payment === "pix") {
@@ -2034,7 +2134,15 @@ export default function App() {
     }
 
     const lines    = items.map((i,n)=>`${n+1}. ${i.name} (Tam. ${i.selectedSize}) — ${fmt(i.price)}`).join("%0A");
-    const payLabel = { credito:"Cartao de Credito (2x sem juros)", debito:"Cartao de Debito", dinheiro:"Dinheiro" }[payment] || payment;
+    const taxa = JUROS[checkoutData.parcelas||1]||0;
+    const totalCredito = total * (1 + taxa);
+    const valorParcela = totalCredito / (checkoutData.parcelas||1);
+    const parcelasLabel = checkoutData.parcelas > 1
+      ? `${checkoutData.parcelas}x de ${fmt(valorParcela)}${checkoutData.parcelas<=2?" (sem juros)":" com juros"} — total ${fmt(totalCredito)}`
+      : `1x de ${fmt(total)} (a vista)`;
+    const payLabel = payment === "credito"
+      ? `Cartao de Credito — ${parcelasLabel}`
+      : { debito:"Cartao de Debito", dinheiro:"Dinheiro" }[payment] || payment;
     const entrega  = delivery === "retirada"
       ? "Retirada na loja"
       : `Entrega — ${form.address}, ${form.number}${form.complement ? " " + form.complement : ""}, ${form.neighborhood ? form.neighborhood + ", " : ""}${form.city}${form.state ? "/" + form.state : ""}, CEP ${form.cep}`;
