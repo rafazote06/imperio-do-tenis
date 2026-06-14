@@ -5,6 +5,7 @@ const WHATSAPP_NUMBER = "554899940366";
 // ── Supabase ──────────────────────────────────────────
 const SUPA_URL = "https://epjnpzwtkjibgdyvbwnb.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwam5wend0a2ppYmdkeXZid25iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NTIyNjIsImV4cCI6MjA5MjQyODI2Mn0.SKvhCXClYLCVo2giuR8KDJ0g4Emi0D-q0pAj92OTCt4";
+const SUPA_STORAGE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwam5wend0a2ppYmdkeXZid25iIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njg1MjI2MiwiZXhwIjoyMDkyNDI4MjYyfQ.3fbrAYw8a-U_IsXem3F7n2Jp48Sh5WDgtVYfC52-YXs";
 
 const supa = {
   from: (table) => {
@@ -1453,14 +1454,18 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
     const res = await fetch(`${SUPA_URL}/storage/v1/object/${bucket}/${filename}`, {
       method: "POST",
       headers: {
-        "apikey":        SUPA_KEY,
-        "Authorization": `Bearer ${SUPA_KEY}`,
+        "apikey":        SUPA_STORAGE,
+        "Authorization": `Bearer ${SUPA_STORAGE}`,
         "Content-Type":  file.type,
         "x-upsert":      "true",
       },
       body: file,
     });
-    if (!res.ok) throw new Error("Erro no upload");
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("Upload error:", res.status, err);
+      throw new Error("Erro no upload: " + res.status);
+    }
     return `${SUPA_URL}/storage/v1/object/public/${bucket}/${filename}`;
   };
 
