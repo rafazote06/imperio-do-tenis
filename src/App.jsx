@@ -15,11 +15,18 @@ const supaHeaders = {
 };
 
 const supaFetch = async (path, opts = {}) => {
+  const { headers: extraHeaders, ...restOpts } = opts;
   const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
-    headers: supaHeaders,
-    ...opts,
+    headers: { ...supaHeaders, ...extraHeaders },
+    ...restOpts,
   });
-  return res.json();
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("supaFetch error:", res.status, path, err);
+    return null;
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 };
 
 const supa = {
@@ -1527,17 +1534,23 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
       if (editing === "new") {
         const res = await supaFetch("produtos", {
           method: "POST",
+          headers: { "Prefer": "return=representation" },
           body: JSON.stringify(payload),
         });
         const novo = Array.isArray(res) ? res[0] : (res && res.id ? res : null);
+        console.log("Produto criado:", novo);
         if (novo && novo.id) {
           const validSizes = sizes.filter(s => s.size && s.size.trim());
           for (const s of validSizes) {
-            await supaFetch("produto_tamanhos", {
+            const sizeRes = await supaFetch("produto_tamanhos", {
               method: "POST",
+              headers: { "Prefer": "return=representation" },
               body: JSON.stringify({ produto_id: novo.id, size: s.size.trim(), stock: +s.stock||0 }),
             });
+            console.log("Tamanho salvo:", sizeRes);
           }
+        } else {
+          console.error("Produto criado mas sem ID:", res);
         }
         showMsg("Produto criado!");
       } else {
