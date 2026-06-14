@@ -728,7 +728,7 @@ function ProductCard({ product, onOpen }) {
       <div className="card-body">
         <div className="card-brand">{product.brand}</div>
         <div className="card-name">{product.name}</div>
-        <div className="card-old-price">{fmt(product.oldPrice)}</div>
+        {product.oldPrice > 0 && <div className="card-old-price">{fmt(product.oldPrice)}</div>}
         <div className="card-price">{fmt(product.price)}</div>
         <div className="card-pix">Pix: {fmt(pixP(product.price))}</div>
         <div className="card-install">ou 2x de {fmt(product.price/2)} sem juros</div>
@@ -760,7 +760,7 @@ function ProductModal({ product, onClose, onAddCart }) {
         <img className="modal-img" src={product.image} alt={product.name} />
         <div className="modal-brand">{product.brand}</div>
         <div className="modal-name">{product.name}</div>
-        <div className="modal-old">{fmt(product.oldPrice)}</div>
+        {product.oldPrice > 0 && <div className="modal-old">{fmt(product.oldPrice)}</div>}
         <div className="modal-price">{fmt(product.price)}</div>
         <div className="modal-pix">No Pix: {fmt(pixP(product.price))} — 5% OFF</div>
         <div className="modal-install">ou 2x de {fmt(product.price/2)} sem juros</div>
@@ -1360,6 +1360,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const [saving,      setSaving]     = useState(false);
   const [loading,     setLoading]    = useState(true);
   const [msg,         setMsg]        = useState("");
+  const [adminSearch, setAdminSearch] = useState("");
 
   const showMsg = (t) => { setMsg(t); setTimeout(()=>setMsg(""), 3000); };
 
@@ -1524,13 +1525,18 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
       };
 
       if (editing === "new") {
-        const res = await supa.from("produtos").insert(payload);
-        const novo = Array.isArray(res) ? res[0] : null;
-        if (novo) {
-          // Salvar tamanhos
-          const validSizes = sizes.filter(s=>s.size.trim());
+        const res = await supaFetch("produtos", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        const novo = Array.isArray(res) ? res[0] : (res && res.id ? res : null);
+        if (novo && novo.id) {
+          const validSizes = sizes.filter(s => s.size && s.size.trim());
           for (const s of validSizes) {
-            await supa.from("produto_tamanhos").insert({ produto_id: novo.id, size: s.size.trim(), stock: +s.stock||0 });
+            await supaFetch("produto_tamanhos", {
+              method: "POST",
+              body: JSON.stringify({ produto_id: novo.id, size: s.size.trim(), stock: +s.stock||0 }),
+            });
           }
         }
         showMsg("Produto criado!");
@@ -1701,14 +1707,24 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
         {/* ── LISTA PRODUTOS ── */}
         {!editing && !editingBanner && tab==="produtos" && (
           <>
-            <button className="btn-gold" style={{width:"100%",marginBottom:16}} onClick={openNew}>+ Novo Produto</button>
+            <div style={{display:"flex",gap:8,marginBottom:12}}>
+              <button className="btn-gold" style={{flex:1}} onClick={openNew}>+ Novo Produto</button>
+              <button className="btn-ghost" style={{padding:"10px"}} onClick={loadProducts}>↻</button>
+            </div>
+            <input
+              className="form-input"
+              placeholder="Buscar produto..."
+              style={{marginBottom:12}}
+              value={adminSearch||""}
+              onChange={e=>setAdminSearch(e.target.value)}
+            />
             {loading ? (
               <div style={{textAlign:"center",padding:"30px 0",color:"var(--muted)",fontSize:13}}>Carregando...</div>
             ) : products.length === 0 ? (
               <div style={{textAlign:"center",padding:"30px 0",color:"var(--muted)",fontSize:13}}>
                 Nenhum produto cadastrado.<br/>Clique em "+ Novo Produto" para comecar.
               </div>
-            ) : products.map(p=>(
+            ) : products.filter(p => !adminSearch || p.name.toLowerCase().includes(adminSearch.toLowerCase()) || (p.brand||"").toLowerCase().includes(adminSearch.toLowerCase())).map(p=>(
               <div key={p.id} style={{display:"flex",gap:10,alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
                 <img src={p.image||"https://via.placeholder.com/42"} alt={p.name}
                   style={{width:46,height:46,borderRadius:8,objectFit:"cover",flexShrink:0}} />
