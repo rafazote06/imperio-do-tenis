@@ -1559,6 +1559,19 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
           headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        // Deletar tamanhos antigos e reinserir
+        await fetch(`${SUPA_URL}/rest/v1/produto_tamanhos?produto_id=eq.${editing}`, {
+          method: "DELETE",
+          headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` },
+        });
+        const validSizes = sizes.filter(s => s.size && s.size.trim());
+        for (const s of validSizes) {
+          await supaFetch("produto_tamanhos", {
+            method: "POST",
+            headers: { "Prefer": "return=representation" },
+            body: JSON.stringify({ produto_id: editing, size: s.size.trim(), stock: +s.stock||0 }),
+          });
+        }
         showMsg("Produto atualizado!");
       }
       setEditing(null);
