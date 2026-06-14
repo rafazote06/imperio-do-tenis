@@ -1885,11 +1885,11 @@ export default function App() {
       try {
         const prods = await supa.from("produtos").select(
           "id,cat,name,brand,description,price,old_price,stock,image",
-          { filter: "ativo=eq.true", order: "created_at.asc" }
+          { filter: "ativo=eq.true&order=created_at.asc" }
         );
         const sizes = await supa.from("produto_tamanhos").select("produto_id,size,stock");
-        const bans  = await supa.from("banners").select("*", { filter: "ativo=eq.true", order: "ordem.asc" });
-        const cats  = await supa.from("categorias").select("id,label,ordem", { order: "ordem.asc" });
+        const bans  = await supa.from("banners").select("*", { filter: "ativo=eq.true&order=ordem.asc" });
+        const cats  = await supa.from("categorias").select("id,label,ordem", { filter: "order=ordem.asc" });
 
         const prodsFull = (Array.isArray(prods) ? prods : []).map(p => ({
           ...p,
