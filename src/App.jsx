@@ -1220,9 +1220,15 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
         )}
         {delivery === "entrega" && (
           <div style={{background:"#0e0b00",border:"1px solid var(--gold3)",borderRadius:10,padding:"10px 14px",marginTop:10,fontSize:12,color:"var(--muted)",lineHeight:1.7}}>
-            <div style={{color:"var(--gold)",fontWeight:700,marginBottom:4}}>Informacoes sobre entrega</div>
-            Entrega realizada via <strong style={{color:"var(--white)"}}>99 ou Uber</strong> — o valor do frete sera negociado diretamente com voce pelo WhatsApp.<br/>
-            <span style={{color:"var(--gold3)"}}>Atendemos Grande Florianopolis, Palhoca e Sao Jose.</span>
+            <div style={{color:"var(--gold)",fontWeight:700,marginBottom:6}}>Informacoes sobre entrega</div>
+            <div style={{marginBottom:6}}>
+              <strong style={{color:"var(--white)"}}>Grande Florianopolis, Palhoca e Sao Jose:</strong><br/>
+              Entrega via <strong style={{color:"var(--white)"}}>99 ou Uber</strong> — frete negociado pelo WhatsApp.
+            </div>
+            <div>
+              <strong style={{color:"var(--white)"}}>Todo o Brasil:</strong><br/>
+              Envio via <strong style={{color:"var(--white)"}}>Sedex</strong> — frete calculado pelo WhatsApp apos o pedido.
+            </div>
           </div>
         )}
 
