@@ -826,9 +826,9 @@ function ProductModal({ product, onClose, onAddCart }) {
   };
 
   return (
-    <div className="overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>x</button>
+    <div className="overlay" onClick={onClose} style={{zIndex:200}}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{position:"relative"}}>
+        <button className="modal-close" onClick={onClose} style={{zIndex:10,position:"relative"}}>✕</button>
         <div style={{position:"relative",marginBottom:18}}>
           <img className="modal-img" style={{marginBottom:0}} src={allFotos[fotoIdx] || product.image} alt={product.name} />
           {allFotos.length > 1 && (
