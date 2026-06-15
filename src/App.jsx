@@ -1831,7 +1831,8 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
 
   const openNew = () => {
     setEditing("new");
-    setForm({ name:"", brand:"", cat:"Tenis", description:"", price:"", old_price:"", stock:"", image:"", fotos:[], ativo:true });
+    const firstCat = catList.find(c => c.id !== "Todos")?.id || categories.find(c => c.id !== "Todos")?.id || "";
+    setForm({ name:"", brand:"", cat:firstCat, description:"", price:"", old_price:"", stock:"", image:"", fotos:[], ativo:true });
     setSizes([{ size:"", stock:"" }]);
   };
 
