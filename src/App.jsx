@@ -1709,12 +1709,23 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   };
 
   const deleteCategoria = async (id) => {
-    if (!window.confirm(`Remover categoria "${id}"?`)) return;
-    await fetch(`${SUPA_URL}/rest/v1/categorias?id=eq.${id}`, {
+    if (!window.confirm(`Remover categoria "${id}"? Todos os produtos desta categoria ficarão sem categoria.`)) return;
+    // Primeiro mover produtos para sem categoria (null) ou outra
+    await fetch(`${SUPA_URL}/rest/v1/produtos?cat=eq.${id}`, {
+      method: "PATCH",
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ cat: catList.find(c => c.id !== id)?.id || null }),
+    });
+    // Depois deletar a categoria
+    const res = await fetch(`${SUPA_URL}/rest/v1/categorias?id=eq.${id}`, {
       method: "DELETE",
       headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` },
     });
-    showMsg("Categoria removida!");
+    if (res.ok) {
+      showMsg("Categoria removida!");
+    } else {
+      showMsg("Erro ao remover categoria.");
+    }
     await loadCategorias();
   };
 
