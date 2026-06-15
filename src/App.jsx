@@ -755,11 +755,43 @@ function AnnouncementBar() {
 }
 
 function ProductCard({ product, onOpen }) {
+  const allFotos = product.fotos && product.fotos.length > 0
+    ? [product.image, ...product.fotos.filter(f => f !== product.image)]
+    : [product.image];
+  const [fotoIdx, setFotoIdx] = useState(0);
+
   return (
     <div className="card" onClick={() => onOpen(product)}>
       <div className="card-img-wrap">
-        <img className="card-img" src={product.image} alt={product.name} loading="lazy" />
+        <img className="card-img" src={allFotos[fotoIdx] || product.image} alt={product.name} loading="lazy" />
         {product.stock <= 2 && product.stock > 0 && <span className="card-stock-low">Últimas unidades</span>}
+        {allFotos.length > 1 && (
+          <>
+            <button
+              onClick={e=>{e.stopPropagation();setFotoIdx(i=>(i-1+allFotos.length)%allFotos.length);}}
+              style={{position:"absolute",left:6,top:"50%",transform:"translateY(-50%)",
+                background:"rgba(0,0,0,.6)",border:"none",color:"#fff",borderRadius:"50%",
+                width:26,height:26,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              ‹
+            </button>
+            <button
+              onClick={e=>{e.stopPropagation();setFotoIdx(i=>(i+1)%allFotos.length);}}
+              style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",
+                background:"rgba(0,0,0,.6)",border:"none",color:"#fff",borderRadius:"50%",
+                width:26,height:26,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              ›
+            </button>
+            <div style={{position:"absolute",bottom:6,left:"50%",transform:"translateX(-50%)",
+              display:"flex",gap:4}}>
+              {allFotos.map((_,i)=>(
+                <div key={i} onClick={e=>{e.stopPropagation();setFotoIdx(i);}}
+                  style={{width:i===fotoIdx?14:6,height:6,borderRadius:999,
+                    background:i===fotoIdx?"var(--gold)":"rgba(255,255,255,.5)",
+                    cursor:"pointer",transition:"all .2s"}} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
       <div className="card-body">
         <div className="card-brand">{product.brand}</div>
@@ -782,6 +814,10 @@ function ProductCard({ product, onOpen }) {
 function ProductModal({ product, onClose, onAddCart }) {
   const [selSize, setSelSize] = useState(null);
   const [qty, setQty] = useState(1);
+  const allFotos = product.fotos && product.fotos.length > 0
+    ? [product.image, ...product.fotos.filter(f => f !== product.image)]
+    : [product.image];
+  const [fotoIdx, setFotoIdx] = useState(0);
 
   const handleAdd = () => {
     if (!selSize) return;
@@ -793,7 +829,41 @@ function ProductModal({ product, onClose, onAddCart }) {
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>x</button>
-        <img className="modal-img" src={product.image} alt={product.name} />
+        <div style={{position:"relative",marginBottom:18}}>
+          <img className="modal-img" style={{marginBottom:0}} src={allFotos[fotoIdx] || product.image} alt={product.name} />
+          {allFotos.length > 1 && (
+            <>
+              <button onClick={()=>setFotoIdx(i=>(i-1+allFotos.length)%allFotos.length)}
+                style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",
+                  background:"rgba(0,0,0,.7)",border:"none",color:"#fff",borderRadius:"50%",
+                  width:32,height:32,cursor:"pointer",fontSize:20,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                ‹
+              </button>
+              <button onClick={()=>setFotoIdx(i=>(i+1)%allFotos.length)}
+                style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",
+                  background:"rgba(0,0,0,.7)",border:"none",color:"#fff",borderRadius:"50%",
+                  width:32,height:32,cursor:"pointer",fontSize:20,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                ›
+              </button>
+              <div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",display:"flex",gap:6}}>
+                {allFotos.map((_,i)=>(
+                  <div key={i} onClick={()=>setFotoIdx(i)}
+                    style={{width:i===fotoIdx?18:8,height:8,borderRadius:999,
+                      background:i===fotoIdx?"var(--gold)":"rgba(255,255,255,.4)",
+                      cursor:"pointer",transition:"all .2s"}} />
+                ))}
+              </div>
+              <div style={{display:"flex",gap:8,marginTop:10,overflowX:"auto",paddingBottom:4}}>
+                {allFotos.map((f,i)=>(
+                  <img key={i} src={f} alt="" onClick={()=>setFotoIdx(i)}
+                    style={{width:56,height:56,borderRadius:8,objectFit:"cover",flexShrink:0,
+                      cursor:"pointer",border:`2px solid ${i===fotoIdx?"var(--gold)":"transparent"}`,
+                      opacity:i===fotoIdx?1:0.6,transition:"all .2s"}} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <div className="modal-brand">{product.brand}</div>
         <div className="modal-name">{product.name}</div>
         {product.oldPrice > 0 && <div className="modal-old">{fmt(product.oldPrice)}</div>}
@@ -1716,13 +1786,16 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
 
   const openNew = () => {
     setEditing("new");
-    setForm({ name:"", brand:"", cat:"Tenis", description:"", price:"", old_price:"", stock:"", image:"", ativo:true });
+    setForm({ name:"", brand:"", cat:"Tenis", description:"", price:"", old_price:"", stock:"", image:"", fotos:[], ativo:true });
     setSizes([{ size:"", stock:"" }]);
   };
 
   const openEdit = async (p) => {
     setEditing(p.id);
-    setForm({ ...p, old_price: p.old_price||"" });
+    // Carregar fotos extras
+    const fotosData = await supaFetch(`produto_fotos?select=url,ordem&produto_id=eq.${p.id}&order=ordem.asc`);
+    const fotosUrls = Array.isArray(fotosData) ? fotosData.map(f=>f.url) : [];
+    setForm({ ...p, old_price: p.old_price||"", fotos: fotosUrls });
     // Carregar tamanhos
     try {
       const data = await supaFetch(`produto_tamanhos?select=size,stock&produto_id=eq.${p.id}`);
@@ -1764,6 +1837,16 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
             });
           }
         }
+        // Salvar fotos extras
+        if (novo && novo.id && form.fotos && form.fotos.length > 0) {
+          for (let i = 0; i < form.fotos.length; i++) {
+            await fetch(`${SUPA_URL}/rest/v1/produto_fotos`, {
+              method: "POST",
+              headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+              body: JSON.stringify({ produto_id: novo.id, url: form.fotos[i], ordem: i }),
+            });
+          }
+        }
         showMsg("Produto criado!");
       } else {
         await fetch(`${SUPA_URL}/rest/v1/produtos?id=eq.${editing}`, {
@@ -1788,6 +1871,20 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
             },
             body: JSON.stringify({ produto_id: editing, size: s.size.trim(), stock: +s.stock||0 }),
           });
+        }
+        // Atualizar fotos extras
+        await fetch(`${SUPA_URL}/rest/v1/produto_fotos?produto_id=eq.${editing}`, {
+          method: "DELETE",
+          headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` },
+        });
+        if (form.fotos && form.fotos.length > 0) {
+          for (let i = 0; i < form.fotos.length; i++) {
+            await fetch(`${SUPA_URL}/rest/v1/produto_fotos`, {
+              method: "POST",
+              headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+              body: JSON.stringify({ produto_id: editing, url: form.fotos[i], ordem: i }),
+            });
+          }
         }
         showMsg("Produto atualizado!");
       }
@@ -2177,6 +2274,7 @@ export default function App() {
       try {
         const prods = await supaFetch("produtos?select=id,cat,name,brand,description,price,old_price,stock,image&ativo=eq.true");
         const sizes = await supaFetch("produto_tamanhos?select=produto_id,size,stock");
+        const fotos = await supaFetch("produto_fotos?select=produto_id,url,ordem&order=ordem.asc");
         const bans  = await supaFetch("banners?select=*&order=ordem.asc");
         const cats  = await supaFetch("categorias?select=id,label,ordem&order=ordem.asc");
 
@@ -2189,6 +2287,10 @@ export default function App() {
           sizes: (Array.isArray(sizes) ? sizes : [])
             .filter(s => s.produto_id === p.id)
             .map(s => ({ size: s.size, stock: Number(s.stock) || 0 })),
+          fotos: (Array.isArray(fotos) ? fotos : [])
+            .filter(f => f.produto_id === p.id)
+            .sort((a,b) => a.ordem - b.ordem)
+            .map(f => f.url),
         }));
 
         if (prodsFull.length > 0) setProducts(prodsFull);
