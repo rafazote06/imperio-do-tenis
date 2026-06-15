@@ -1141,7 +1141,7 @@ function CheckoutModal({ items, payment, total, onClose, onConfirm }) {
     if (digits.length === 8) fetchCep(digits);
   };
 
-  const validaté = () => {
+  const validate = () => {
     const e = {};
     if (!form.name.trim())  e.name  = true;
     if (!form.phone.trim()) e.phone = true;
@@ -1568,7 +1568,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const loadPedidos = async () => {
     setLoading(true);
     try {
-      const data = await supaFetch("pedidos?select=id,customer_name,customer_phone,items,total,payment,delivery_type,address,number,city,state,status,comprovante");
+      const data = await supaFetch("pedidos?select=customer_name,customer_phone,items,total,payment,delivery_type,address,number,city,state,status,comprovante");
       setPedidos(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar pedidos"); }
     setLoading(false);
