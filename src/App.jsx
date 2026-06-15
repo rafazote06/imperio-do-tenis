@@ -1957,30 +1957,47 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
               {editing==="new" ? "Novo Produto" : "Editar Produto"}
             </div>
 
-{/* Imagem com upload */}
+{/* Imagem Fotos do produto */}
             <div className="form-group">
-              <label className="form-label">Foto do Produto</label>
-              <label style={{
-                display:"flex", alignItems:"center", justifyContent:"center",
-                gap:10, background:"#111", border:"2px dashed var(--border)",
-                borderRadius:10, padding:"14px", cursor:"pointer",
-                transition:"border-color .2s", marginBottom:0,
-              }}
-                onMouseEnter={e=>e.currentTarget.style.borderColor="var(--gold)"}
-                onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}
-              >
-                <input type="file" accept="image/*" style={{display:"none"}} onChange={handleImageUpload} />
-                {form.image
-                  ? <img src={form.image} alt="" style={{width:60,height:60,borderRadius:8,objectFit:"cover"}} />
-                  : <div style={{fontSize:28,color:"var(--muted)"}}>+</div>
-                }
-                <div>
-                  <div style={{fontSize:13,color:"var(--white)",fontWeight:600}}>
-                    {form.image ? "Trocar foto" : "Clique para escolher foto"}
+              <label className="form-label">Fotos do Produto</label>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
+                <label style={{position:"relative",cursor:"pointer"}}>
+                  <input type="file" accept="image/*" style={{display:"none"}} onChange={handleImageUpload} />
+                  {form.image
+                    ? <img src={form.image} alt="" style={{width:72,height:72,borderRadius:8,objectFit:"cover",border:"2px solid var(--gold)"}} />
+                    : <div style={{width:72,height:72,borderRadius:8,background:"#222",border:"2px dashed var(--border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,color:"var(--muted)"}}>+</div>
+                  }
+                  <div style={{position:"absolute",bottom:2,left:0,right:0,textAlign:"center",fontSize:9,color:"var(--gold)",fontWeight:700}}>PRINCIPAL</div>
+                </label>
+                {(form.fotos||[]).map((f,i)=>(
+                  <div key={i} style={{position:"relative"}}>
+                    <img src={f} alt="" style={{width:72,height:72,borderRadius:8,objectFit:"cover",border:"1px solid var(--border)"}} />
+                    <button onClick={()=>setForm(fm=>({...fm,fotos:(fm.fotos||[]).filter((_,j)=>j!==i)}))}
+                      style={{position:"absolute",top:-6,right:-6,background:"#e55",border:"none",color:"#fff",
+                        borderRadius:"50%",width:18,height:18,fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      ×
+                    </button>
                   </div>
-                  <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>JPG, PNG ou WEBP</div>
-                </div>
-              </label>
+                ))}
+                <label style={{cursor:"pointer"}}>
+                  <input type="file" accept="image/*" style={{display:"none"}} onChange={async e=>{
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    showMsg("Enviando imagem...");
+                    try {
+                      const url = await uploadImage(file, "produtos");
+                      setForm(fm=>({...fm, fotos:[...(fm.fotos||[]), url]}));
+                      showMsg("Foto adicionada!");
+                    } catch { showMsg("Erro ao enviar foto."); }
+                  }} />
+                  <div style={{width:72,height:72,borderRadius:8,background:"#111",border:"2px dashed var(--border)",
+                    display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}>
+                    <div style={{fontSize:20,color:"var(--muted)"}}>+</div>
+                    <div style={{fontSize:9,color:"var(--muted)"}}>ADD FOTO</div>
+                  </div>
+                </label>
+              </div>
+              <div style={{fontSize:11,color:"var(--muted)"}}>Primeira foto é a principal. Adicione quantas quiser.</div>
             </div>
 
             {[
