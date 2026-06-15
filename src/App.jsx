@@ -1607,6 +1607,12 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const [catList,     setCatList]     = useState([]);
   const [newCatId,    setNewCatId]    = useState("");
   const [newCatLabel, setNewCatLabel] = useState("");
+  const [editingCat,  setEditingCat]  = useState(null);
+  const [editCatLabel,setEditCatLabel]= useState("");
+  const [editCatOrdem,setEditCatOrdem]= useState(0);
+  const [editingCat,  setEditingCat]  = useState(null);
+  const [editCatLabel,setEditCatLabel]= useState("");
+  const [editCatOrdem,setEditCatOrdem]= useState(0);
   const [editing,     setEditing]    = useState(null);
   const [editingBanner, setEditingBanner] = useState(null);
   const [sizes,       setSizes]      = useState([{ size:"", stock:"" }]);
@@ -1674,8 +1680,39 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
     await loadCategorias();
   };
 
+  const saveCategoria = async (id) => {
+    await fetch(`${SUPA_URL}/rest/v1/categorias?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ label: editCatLabel, ordem: editCatOrdem }),
+    });
+    setEditingCat(null);
+    showMsg("Categoria atualizada!");
+    await loadCategorias();
+  };
+
+  const moveCategoria = async (idx, dir) => {
+    const newList = [...catList];
+    const target = idx + dir;
+    if (target < 0 || target >= newList.length) return;
+    const ordemA = newList[idx].ordem;
+    const ordemB = newList[target].ordem;
+    await fetch(`${SUPA_URL}/rest/v1/categorias?id=eq.${newList[idx].id}`, {
+      method: "PATCH",
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ordem: ordemB }),
+    });
+    await fetch(`${SUPA_URL}/rest/v1/categorias?id=eq.${newList[target].id}`, {
+      method: "PATCH",
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ordem: ordemA }),
+    });
+    showMsg("Ordem atualizada!");
+    await loadCategorias();
+  };
+
   const deleteCategoria = async (id) => {
-    if (!window.confirm(`Remover categoria "${id}"? Os produtos desta categoria ficarão sem categoria.`)) return;
+    if (!window.confirm(`Remover categoria "${id}"?`)) return;
     await fetch(`${SUPA_URL}/rest/v1/categorias?id=eq.${id}`, {
       method: "DELETE",
       headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` },
@@ -2200,31 +2237,75 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
         {/* ── CATEGORIAS ── */}
         {!editing && !editingBanner && tab==="categorias" && (
           <>
-            <div style={{fontSize:11,color:"var(--muted)",marginBottom:12,lineHeight:1.6}}>
-              Gerencie as categorias da loja. Remover uma categoria não apaga os produtos dela.
+            {/* Nova categoria */}
+            <div style={{background:"#111",border:"1px solid var(--border)",borderRadius:10,padding:"12px 14px",marginBottom:16}}>
+              <div style={{fontSize:12,color:"var(--gold)",fontWeight:700,marginBottom:10}}>Nova Categoria</div>
+              <div style={{display:"flex",gap:8,marginBottom:8}}>
+                <div style={{flex:1}}>
+                  <label className="form-label">ID (sem espaços)</label>
+                  <input className="form-input" placeholder="Ex: Tenis" value={newCatId} onChange={e=>setNewCatId(e.target.value.replace(/ /g,""))} />
+                </div>
+                <div style={{flex:1}}>
+                  <label className="form-label">Nome exibido</label>
+                  <input className="form-input" placeholder="Ex: Tênis" value={newCatLabel} onChange={e=>setNewCatLabel(e.target.value)} />
+                </div>
+              </div>
+              <button className="btn-gold" style={{width:"100%"}} onClick={addCategoria}>+ Criar Categoria</button>
             </div>
-            <div style={{display:"flex",gap:8,marginBottom:16}}>
-              <input className="form-input" placeholder="ID (ex: Tenis)" value={newCatId} onChange={e=>setNewCatId(e.target.value)} style={{flex:1}} />
-              <input className="form-input" placeholder="Nome exibido" value={newCatLabel} onChange={e=>setNewCatLabel(e.target.value)} style={{flex:1}} />
-              <button className="btn-gold" style={{padding:"10px 14px",flexShrink:0}} onClick={addCategoria}>+</button>
-            </div>
+            <div style={{fontSize:12,color:"var(--gold)",fontWeight:700,marginBottom:10}}>Categorias ({catList.length})</div>
             {loading ? (
               <div style={{textAlign:"center",padding:"20px 0",color:"var(--muted)",fontSize:13}}>Carregando...</div>
             ) : catList.length === 0 ? (
               <div style={{textAlign:"center",padding:"20px 0",color:"var(--muted)",fontSize:13}}>Nenhuma categoria.</div>
-            ) : catList.map(c=>(
-              <div key={c.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
-                <div>
-                  <div style={{fontSize:13,color:"var(--white)",fontWeight:600}}>{c.label}</div>
-                  <div style={{fontSize:11,color:"var(--muted)"}}>ID: {c.id} · ordem: {c.ordem}</div>
-                </div>
-                <button style={{background:"none",border:"none",color:"#e55",cursor:"pointer",fontSize:16}} onClick={()=>deleteCategoria(c.id)}>x</button>
+            ) : catList.map((c,cidx)=>(
+              <div key={c.id} style={{background:"#111",border:"1px solid var(--border)",borderRadius:10,padding:"10px 12px",marginBottom:8}}>
+                {editingCat === c.id ? (
+                  <div>
+                    <div style={{display:"flex",gap:8,marginBottom:8}}>
+                      <div style={{flex:1}}>
+                        <label className="form-label">Nome</label>
+                        <input className="form-input" value={editCatLabel} onChange={e=>setEditCatLabel(e.target.value)} />
+                      </div>
+                      <div style={{width:80}}>
+                        <label className="form-label">Ordem</label>
+                        <input className="form-input" type="number" value={editCatOrdem} onChange={e=>setEditCatOrdem(+e.target.value)} />
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:8}}>
+                      <button className="btn-ghost" style={{flex:1,padding:"8px"}} onClick={()=>setEditingCat(null)}>Cancelar</button>
+                      <button className="btn-gold" style={{flex:2,padding:"8px"}} onClick={()=>saveCategoria(c.id)}>Salvar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                      <button onClick={()=>moveCategoria(cidx,-1)} disabled={cidx===0}
+                        style={{background:"none",border:"1px solid var(--border)",borderRadius:4,color:"var(--muted)",
+                          width:22,height:22,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",
+                          opacity:cidx===0?0.3:1}}>▲</button>
+                      <button onClick={()=>moveCategoria(cidx,1)} disabled={cidx===catList.length-1}
+                        style={{background:"none",border:"1px solid var(--border)",borderRadius:4,color:"var(--muted)",
+                          width:22,height:22,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",
+                          opacity:cidx===catList.length-1?0.3:1}}>▼</button>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,color:"var(--white)",fontWeight:600}}>{c.label}</div>
+                      <div style={{fontSize:11,color:"var(--muted)"}}>ID: {c.id} · Posição: {c.ordem}</div>
+                    </div>
+                    <button className="btn-ghost" style={{padding:"5px 10px",fontSize:11}}
+                      onClick={()=>{setEditingCat(c.id);setEditCatLabel(c.label);setEditCatOrdem(c.ordem);}}>
+                      Editar
+                    </button>
+                    <button style={{background:"none",border:"none",color:"#e55",cursor:"pointer",fontSize:16}}
+                      onClick={()=>deleteCategoria(c.id)}>x</button>
+                  </div>
+                )}
               </div>
             ))}
           </>
         )}
 
-        {/* ── LISTA PEDIDOS ── */}
+                {/* ── LISTA PEDIDOS ── */}
         {!editing && !editingBanner && tab==="pedidos" && (
           <>
             <button className="btn-ghost" style={{width:"100%",marginBottom:12,fontSize:12}} onClick={loadPedidos}>Atualizar</button>
