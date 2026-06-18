@@ -994,9 +994,39 @@ function CartDrawer({ items, onClose, onCheckout }) {
   const [payment, setPayment] = useState(null);
   const [removingIdx, setRemovingIdx] = useState(null);
   const [localItems, setLocalItems] = useState(items);
+  const [cupomInput,  setCupomInput]  = useState("");
+  const [cupomValido, setCupomValido] = useState(null);
+  const [cupomMsg,    setCupomMsg]    = useState("");
+
+  const descCupom = (subtotal) => {
+    if (!cupomValido) return 0;
+    if (cupomValido.tipo === "percentual") return subtotal * (cupomValido.desconto / 100);
+    return Math.min(cupomValido.desconto, subtotal);
+  };
+
+  const aplicarCupom = async () => {
+    if (!cupomInput.trim()) return;
+    try {
+      const data = await supaFetch(`cupons?codigo=eq.${cupomInput.trim()}&ativo=eq.true`);
+      if (Array.isArray(data) && data.length > 0) {
+        const c = data[0];
+        if (c.uso_max && c.uso_atual >= c.uso_max) {
+          setCupomMsg("Cupom esgotado!");
+          setCupomValido(null);
+        } else {
+          setCupomValido(c);
+          setCupomMsg(`Cupom "${c.codigo}" aplicado!`);
+        }
+      } else {
+        setCupomMsg("Cupom inválido ou expirado.");
+        setCupomValido(null);
+      }
+    } catch { setCupomMsg("Erro ao verificar cupom."); }
+  };
 
   const sub   = localItems.reduce((s,i) => s+i.price, 0);
-  const total = payment === "pix" ? pixP(sub) : sub;
+  const subComCupom = sub - descCupom(sub);
+  const total = payment === "pix" ? pixP(subComCupom) : subComCupom;
   const isPix = payment === "pix";
 
   const removeItem = (idx) => {
@@ -1011,7 +1041,7 @@ function CartDrawer({ items, onClose, onCheckout }) {
 
   const handleCheckout = () => {
     if (!payment) { alert("Selecione a forma de pagamento para continuar."); return; }
-    onCheckout(localItems, payment, total, payment === "credito" ? parcelas : null);
+    onCheckout(localItems, payment, total, payment === "credito" ? parcelas : null, cupomValido);
   };
 
   return (
@@ -1041,9 +1071,40 @@ function CartDrawer({ items, onClose, onCheckout }) {
 
         {localItems.length > 0 && (
           <div className="cart-summary">
-            <div className="cart-row" style={{marginBottom:16}}>
+            <div className="cart-row" style={{marginBottom:12}}>
               <span className="cart-row-label">Subtotal</span>
               <span className="cart-row-val">{fmt(sub)}</span>
+            </div>
+            {/* Campo de cupom */}
+            <div style={{marginBottom:14}}>
+              <div style={{display:"flex",gap:6}}>
+                <input
+                  className="form-input"
+                  placeholder="Código do cupom (opcional)"
+                  value={cupomInput}
+                  onChange={e=>{ setCupomInput(e.target.value.toUpperCase()); setCupomMsg(""); setCupomValido(null); }}
+                  style={{flex:1,fontSize:13}}
+                />
+                <button onClick={aplicarCupom}
+                  style={{background:"var(--gold)",border:"none",borderRadius:8,color:"#000",
+                    padding:"0 14px",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>
+                  Aplicar
+                </button>
+              </div>
+              {cupomMsg && (
+                <div style={{fontSize:11,marginTop:4,color:cupomValido?"var(--pix)":"#e55",fontWeight:600}}>
+                  {cupomMsg}
+                </div>
+              )}
+              {cupomValido && (
+                <div style={{fontSize:11,marginTop:4,color:"var(--pix)"}}>
+                  Desconto: -{fmt(descCupom(sub))}
+                  <button onClick={()=>{setCupomInput("");setCupomValido(null);setCupomMsg("");}}
+                    style={{background:"none",border:"none",color:"#e55",cursor:"pointer",marginLeft:8,fontSize:11}}>
+                    Remover
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="cart-payment-label">Forma de Pagamento</div>
@@ -1064,7 +1125,8 @@ function CartDrawer({ items, onClose, onCheckout }) {
               <div className={"cart-total-box" + (isPix?" pix":"")}>
                 <span className="cart-total-label">{isPix ? "Total no Pix" : "Total"}</span>
                 <span className="cart-total-val">{fmt(total)}</span>
-                {isPix && <span className="cart-total-saving">Você economiza {fmt(sub - total)}</span>}
+                {isPix && <span className="cart-total-saving">Você economiza {fmt(subComCupom - total)}</span>}
+                {cupomValido && !isPix && <span className="cart-total-saving">Cupom: -{fmt(descCupom(sub))}</span>}
                 {payment === "credito" && (
                   <CreditoParcelamento total={total} onSelect={setParcelas_cart} />
                 )}
@@ -1610,6 +1672,8 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
   const [editingCat,  setEditingCat]  = useState(null);
   const [editCatLabel,setEditCatLabel]= useState("");
   const [editCatOrdem,setEditCatOrdem]= useState(0);
+  const [cupons,      setCupons]      = useState([]);
+  const [newCupom,    setNewCupom]    = useState({codigo:"", desconto:"", tipo:"percentual", uso_max:""});
   const [editing,     setEditing]    = useState(null);
   const [editingBanner, setEditingBanner] = useState(null);
   const [sizes,       setSizes]      = useState([{ size:"", stock:"" }]);
@@ -1627,6 +1691,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
     if (tab === "pedidos")    loadPedidos();
     if (tab === "banners")    loadBanners();
     if (tab === "categorias") loadCategorias();
+    if (tab === "cupons")     loadCupons();
   }, [tab]);
 
   const loadProducts = async () => {
@@ -1663,6 +1728,56 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
       setCatList(Array.isArray(data) ? data : []);
     } catch(e) { showMsg("Erro ao carregar categorias"); }
     setLoading(false);
+  };
+
+  const loadCupons = async () => {
+    setLoading(true);
+    try {
+      const data = await supaFetch("cupons?select=*&order=codigo.asc");
+      setCupons(Array.isArray(data) ? data : []);
+    } catch(e) { showMsg("Erro ao carregar cupons"); }
+    setLoading(false);
+  };
+
+  const addCupom = async () => {
+    if (!newCupom.codigo.trim() || !newCupom.desconto) { showMsg("Preencha código e desconto"); return; }
+    const res = await fetch(`${SUPA_URL}/rest/v1/cupons`, {
+      method: "POST",
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify({
+        codigo:    newCupom.codigo.toUpperCase().trim(),
+        desconto:  +newCupom.desconto,
+        tipo:      newCupom.tipo,
+        uso_max:   newCupom.uso_max ? +newCupom.uso_max : null,
+        ativo:     true,
+      }),
+    });
+    if (res.ok) {
+      setNewCupom({codigo:"", desconto:"", tipo:"percentual", uso_max:""});
+      showMsg("Cupom criado!");
+      await loadCupons();
+    } else {
+      showMsg("Erro — código já existe?");
+    }
+  };
+
+  const toggleCupom = async (id, ativo) => {
+    await fetch(`${SUPA_URL}/rest/v1/cupons?id=eq.${id}`, {
+      method: "PATCH",
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ativo }),
+    });
+    setCupons(c => c.map(x => x.id===id ? {...x, ativo} : x));
+  };
+
+  const deleteCupom = async (id) => {
+    if (!window.confirm("Remover cupom?")) return;
+    await fetch(`${SUPA_URL}/rest/v1/cupons?id=eq.${id}`, {
+      method: "DELETE",
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` },
+    });
+    showMsg("Cupom removido!");
+    await loadCupons();
   };
 
   const addCategoria = async () => {
@@ -1982,6 +2097,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
               {id:"produtos", label:`Produtos (${products.length})`},
               {id:"banners",     label:`Banners (${bannerList.length})`},
               {id:"categorias",  label:`Categorias`},
+              {id:"cupons",      label:`Cupons`},
               {id:"pedidos",     label:`Pedidos (${pedidos.length})`},
             ].map(t=>(
               <button key={t.id} onClick={()=>setTab(t.id)}
@@ -2130,7 +2246,7 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
               </div>
             ) : products.filter(p => !adminSearch || p.name.toLowerCase().includes(adminSearch.toLowerCase()) || (p.brand||"").toLowerCase().includes(adminSearch.toLowerCase())).map(p=>(
               <div key={p.id} style={{display:"flex",gap:10,alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
-                <img src={p.image||"https://via.placeholder.com/42"} alt={p.name}
+                <img src={p.image||"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"} alt={p.name}
                   style={{width:46,height:46,borderRadius:8,objectFit:"cover",flexShrink:0}} />
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:13,color:"var(--white)",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>
@@ -2314,7 +2430,66 @@ function AdminPanel({ onClose, categories = CATEGORIES_DEFAULT }) {
           </>
         )}
 
-                {/* ── LISTA PEDIDOS ── */}
+                {/* ── CUPONS ── */}
+        {!editing && !editingBanner && tab==="cupons" && (
+          <>
+            <div style={{background:"#111",border:"1px solid var(--border)",borderRadius:10,padding:"12px 14px",marginBottom:16}}>
+              <div style={{fontSize:12,color:"var(--gold)",fontWeight:700,marginBottom:10}}>Novo Cupom</div>
+              <div style={{display:"flex",gap:8,marginBottom:8}}>
+                <div style={{flex:2}}>
+                  <label className="form-label">Código</label>
+                  <input className="form-input" placeholder="Ex: PROMO10" value={newCupom.codigo}
+                    onChange={e=>setNewCupom(c=>({...c,codigo:e.target.value.toUpperCase()}))} />
+                </div>
+                <div style={{flex:1}}>
+                  <label className="form-label">Desconto</label>
+                  <input className="form-input" type="number" placeholder="10" value={newCupom.desconto}
+                    onChange={e=>setNewCupom(c=>({...c,desconto:e.target.value}))} />
+                </div>
+                <div style={{flex:1}}>
+                  <label className="form-label">Tipo</label>
+                  <select className="form-input" value={newCupom.tipo} onChange={e=>setNewCupom(c=>({...c,tipo:e.target.value}))}>
+                    <option value="percentual">% desconto</option>
+                    <option value="fixo">R$ fixo</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{marginBottom:8}}>
+                <label className="form-label">Limite de usos (opcional)</label>
+                <input className="form-input" type="number" placeholder="Deixe vazio para ilimitado"
+                  value={newCupom.uso_max} onChange={e=>setNewCupom(c=>({...c,uso_max:e.target.value}))} />
+              </div>
+              <button className="btn-gold" style={{width:"100%"}} onClick={addCupom}>+ Criar Cupom</button>
+            </div>
+
+            {loading ? (
+              <div style={{textAlign:"center",padding:"20px 0",color:"var(--muted)",fontSize:13}}>Carregando...</div>
+            ) : cupons.length === 0 ? (
+              <div style={{textAlign:"center",padding:"20px 0",color:"var(--muted)",fontSize:13}}>Nenhum cupom cadastrado.</div>
+            ) : cupons.map(c=>(
+              <div key={c.id} style={{background:"#111",border:"1px solid var(--border)",borderRadius:10,padding:"10px 14px",marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,color:"var(--gold)",fontWeight:800,letterSpacing:2}}>{c.codigo}</div>
+                    <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>
+                      {c.tipo==="percentual" ? `${c.desconto}% de desconto` : `R$ ${c.desconto} de desconto`}
+                      {c.uso_max ? ` · ${c.uso_atual}/${c.uso_max} usos` : ` · ${c.uso_atual} usos · ilimitado`}
+                    </div>
+                  </div>
+                  <button onClick={()=>toggleCupom(c.id,!c.ativo)}
+                    style={{background:"none",border:`1px solid ${c.ativo?"#e55":"var(--pix)"}`,borderRadius:6,
+                      color:c.ativo?"#e55":"var(--pix)",padding:"3px 10px",fontSize:11,cursor:"pointer",fontWeight:700}}>
+                    {c.ativo?"Desativar":"Ativar"}
+                  </button>
+                  <button style={{background:"none",border:"none",color:"#e55",cursor:"pointer",fontSize:16}}
+                    onClick={()=>deleteCupom(c.id)}>x</button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* ── LISTA PEDIDOS ── */}
         {!editing && !editingBanner && tab==="pedidos" && (
           <>
             <button className="btn-ghost" style={{width:"100%",marginBottom:12,fontSize:12}} onClick={loadPedidos}>Atualizar</button>
@@ -2426,8 +2601,8 @@ export default function App() {
     setLastAdded(item);
   }, []);
 
-  const checkout = (items, payment, total, parcelas) => {
-    setCheckoutData({ items, payment, total, parcelas, frete: null });
+  const checkout = (items, payment, total, parcelas, cupom) => {
+    setCheckoutData({ items, payment, total, parcelas, frete: null, cupom });
     setCartOpen(false);
   };
 
@@ -2463,7 +2638,7 @@ export default function App() {
       `*WhatsApp:* ${form.phone}`,
       `*Entrega:* ${entrega}`,
       `*Pagamento:* ${payLabel}${form.troco ? " — Troco para " + form.troco : ""}`,
-      `*Total: ${fmt(total)}*`,
+      `*Total: ${fmt(total)}*${checkoutData.cupom ? " (Cupom: " + checkoutData.cupom.codigo + ")" : ""}`,
     ].join("%0A");
     // Salvar pedido no banco
     supa.from("pedidos").insert({
